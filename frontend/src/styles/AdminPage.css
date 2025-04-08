@@ -1,0 +1,28 @@
+/* src/styles/AdminPage.css */
+
+.admin-page {
+    background-color: #141414;
+    padding: 2rem;
+  }
+  
+  .admin-movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .admin-movie-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .admin-movie-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .poster-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
