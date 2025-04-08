@@ -11,5 +11,8 @@
         public string? rating { get; set; }
         public string? duration { get; set; }
         public string? description { get; set; }
+
+        // ✅ Add this
+        public List<string>? genres { get; set; }
     }
 }
