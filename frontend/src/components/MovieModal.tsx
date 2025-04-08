@@ -1,81 +1,50 @@
 import React from 'react';
 import { MovieCardProps } from '../types/Movie';
+import { FaStar, FaPlay } from 'react-icons/fa';
+import '../styles/MovieModal.css';
 
-type MovieModalProps = {
+interface Props {
   movie: MovieCardProps;
   onClose: () => void;
-  onPlay: (movie: MovieCardProps) => void; // ✅ THIS LINE
-};
+  onPlay: (movie: MovieCardProps) => void;
+}
 
-const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose, onPlay }) => {
-  const handlePlayClick = () => {
-    onPlay(movie);
-    onClose();
-  };
-
+const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
   return (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 z-3 px-3">
-      <div className="bg-dark text-light rounded shadow-lg overflow-hidden w-100" style={{ maxWidth: '800px' }}>
-        {/* Close Button */}
-        <button
-          className="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-          onClick={onClose}
-          aria-label="Close"
-        ></button>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
 
-        {/* Content */}
-        <div className="row g-0">
-          {/* Poster */}
-          <div className="col-md-5">
-            <img
-              src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
-              alt={movie.title}
-              className="img-fluid h-100 object-fit-cover"
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
+        <div className="modal-content">
+          <img src={movie.poster} alt={movie.title} className="modal-poster" />
+          <div className="modal-info">
+            <h2>{movie.title}</h2>
 
-          {/* Info */}
-          <div className="col-md-7 p-4">
-            <h2 className="h4 fw-bold">{movie.title}</h2>
-            <p className="text-muted small mb-2">
-              {movie.releaseYear} • {movie.duration}
-            </p>
+            <div className="modal-genres">
+              {movie.genres?.map((genre) => (
+                <span key={genre} className="genre-badge">{genre}</span>
+              ))}
+            </div>
 
-            {/* Genres */}
-            {(movie.genres?.length ?? 0) > 0 && (
-              <div className="mb-3">
-                {(movie.genres ?? []).map((genre) => (
-                  <span
-                    key={genre}
-                    className="badge bg-danger me-2 mb-2"
-                  >
-                    {genre}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="modal-rating">
+  <span className="rating-label">Rating:</span> <span>{movie.rating} / 10</span>
+</div>
 
-            {/* Rating */}
-            {movie.rating && (
-              <p className="text-warning mb-2">
-                ⭐ {movie.rating.toFixed(1)} / 5
-              </p>
-            )}
 
-            {/* Description */}
-            <p className="small mb-3">{movie.description}</p>
+            <p><strong>Director:</strong> Unknown</p>
+            <p><strong>Cast:</strong> Unknown</p>
 
-            <p className="small text-muted mb-1">
-              <strong>Director:</strong> {movie.director || 'Unknown'}
-            </p>
-            <p className="small text-muted mb-3">
-              <strong>Cast:</strong> {movie.cast || 'Unknown'}
-            </p>
+<div className="modal-right-meta">
+  {movie.cast && (
+    <p><span className="label">Cast:</span> {movie.cast}, <em>more</em></p>
+  )}
+  {movie.genres && (
+    <p><span className="label">Genres:</span> {movie.genres.join(', ')}</p>
+  )}
+</div>
 
-            {/* Play Button */}
-            <button className="btn btn-danger mt-2" onClick={handlePlayClick}>
-              ▶️ Play
+            <button className="modal-play" onClick={() => onPlay(movie)}>
+              <FaPlay className="me-2" /> Play
             </button>
           </div>
         </div>

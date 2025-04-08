@@ -5,7 +5,7 @@ import { Dropdown, FormControl } from 'react-bootstrap';
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = location.pathname.startsWith('/movies'); // Or use auth logic
+  const isLoggedIn = location.pathname.startsWith('/movies');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -16,37 +16,34 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Clear auth if needed
     navigate('/');
   };
 
   return (
-    <header className="w-100 bg-black text-white px-4 py-3 d-flex justify-content-between align-items-center shadow-sm">
-      <h1 className="h4 m-0 fw-bold">CineNiche</h1>
+    <header className="cineniche-header">
+      <Link to="/" className="cineniche-logo">
+        CineNiche
+      </Link>
 
       {isLoggedIn && (
-        <div className="d-flex align-items-center gap-3">
-          <div className="position-relative">
+        <div className="header-controls">
+          <div className="search-wrapper">
             <FormControl
               type="text"
-              placeholder="Search movies..."
-              className="form-control"
+              placeholder="Search titles..."
+              className="search-input"
               value={searchQuery}
               onChange={handleSearchChange}
-              style={{ width: '200px' }}
             />
             {showDropdown && (
-              <div
-                className="bg-dark border border-secondary rounded mt-1 position-absolute w-100 z-3"
-                style={{ top: '100%' }}
-              >
+              <div className="search-dropdown">
                 <p className="m-0 p-2 text-muted">Search results coming soon...</p>
               </div>
             )}
           </div>
 
           <Dropdown align="end">
-            <Dropdown.Toggle variant="outline-light" id="account-dropdown" size="sm">
+            <Dropdown.Toggle variant="outline-light" id="account-dropdown" size="sm" className="account-btn">
               Account
             </Dropdown.Toggle>
 

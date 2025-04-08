@@ -8,6 +8,24 @@ import genreColumns from '../constants/genreColumns';
 const MAX_CONTINUE_WATCHING = 10;
 const MOVIES_PER_ROW = 10;
 
+const dummyMovies: MovieCardProps[] = [
+  {
+    show_id: 'm1',
+    title: 'Cyber Rebellion',
+    rating: 8.4,
+    poster: '/posters/s1.jpg',
+    genres: ['Sci-Fi'],
+  },
+  {
+    show_id: 'm2',
+    title: 'Dreamscape',
+    rating: 7.8,
+    poster: '/posters/s2.jpg',
+    genres: ['Fantasy'],
+  },
+];
+
+
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null);
@@ -89,35 +107,55 @@ const MoviesPage: React.FC = () => {
 
   return (
     <div className="bg-dark text-light min-vh-100 px-3 pb-5 overflow-auto">
-      {continueWatching.length > 0 && (
-        <MovieRow
-          title="Continue Watching"
-          movies={continueWatching.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
-        />
-      )}
-
       <MovieRow
         title="Recommended for You"
-        movies={recommended.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+        movies={dummyMovies.map((movie) => ({
+          ...movie,
+          onClick: () => setSelectedMovie(movie),
+        }))}
       />
-
-      {Object.entries(genreMap).map(([genre, genreMovies]) => (
-        <MovieRow
-          key={genre}
-          title={genre}
-          movies={genreMovies.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
-        />
-      ))}
-
+  
       {selectedMovie && (
         <MovieModal
           movie={selectedMovie}
           onClose={() => setSelectedMovie(null)}
-          onPlay={handlePlay}
+          onPlay={() => {}}
         />
       )}
     </div>
   );
+  
+  // return (
+  //   <div className="bg-dark text-light min-vh-100 px-3 pb-5 overflow-auto">
+  //     {continueWatching.length > 0 && (
+  //       <MovieRow
+  //         title="Continue Watching"
+  //         movies={continueWatching.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+  //       />
+  //     )}
+
+  //     <MovieRow
+  //       title="Recommended for You"
+  //       movies={recommended.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+  //     />
+
+  //     {Object.entries(genreMap).map(([genre, genreMovies]) => (
+  //       <MovieRow
+  //         key={genre}
+  //         title={genre}
+  //         movies={genreMovies.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+  //       />
+  //     ))}
+
+  //     {selectedMovie && (
+  //       <MovieModal
+  //         movie={selectedMovie}
+  //         onClose={() => setSelectedMovie(null)}
+  //         onPlay={handlePlay}
+  //       />
+  //     )}
+  //   </div>
+  // );
 };
 
 export default MoviesPage;

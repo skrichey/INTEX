@@ -30,9 +30,7 @@ const posterFilenames = [
   's29.jpg',
   's30.jpg',
   's31.jpg',
-  's32.jpg',
-  's33.jpg',
-  's34.jpg',
+  's32.jpg'
 
 ];
 
