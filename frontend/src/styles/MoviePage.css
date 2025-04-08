@@ -1,0 +1,55 @@
+/* MoviePage.css */
+
+.bg-dark {
+    background-color: #141414 !important;
+  }
+  
+  .text-light {
+    color: #ffffff !important;
+  }
+  
+  .min-vh-100 {
+    min-height: 100vh;
+  }
+  
+  .px-3 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .pb-5 {
+    padding-bottom: 3rem;
+  }
+  
+  .overflow-auto {
+    overflow-y: auto;
+  }
+  
+  .movie-row {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    gap: 1rem;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .movie-row::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .movie-row::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+  }
+  
+  .movie-card {
+    scroll-snap-align: start;
+    transition: transform 0.3s ease;
+  }
+  
+  .movie-card:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+  }
+  
+  
