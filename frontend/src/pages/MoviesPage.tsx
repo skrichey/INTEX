@@ -9,7 +9,6 @@ const MAX_CONTINUE_WATCHING = 10;
 const MOVIES_PER_ROW = 10;
 
 const MoviesPage: React.FC = () => {
-  const [movies, setMovies] = useState<MovieCardProps[]>([]);
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null);
   const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>([]);
@@ -19,17 +18,23 @@ const MoviesPage: React.FC = () => {
     const loadData = async () => {
       try {
         const data = await fetchMovies();
-        setMovies(data);
 
-        // Build genre map using first matched genre column
+        // Enrich movies with genres array
+        const enrichedMovies = data.map((movie) => {
+          const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
+          return { ...movie, genres };
+        });
+
+        // Build genre map using first matched genre
         const genres: Record<string, MovieCardProps[]> = {};
-        for (const movie of data) {
-          const primaryGenre = genreColumns.find((g) => (movie as any)[g] === 1);
+        for (const movie of enrichedMovies) {
+          const primaryGenre = movie.genres?.[0];
           if (!primaryGenre) continue;
           if (!genres[primaryGenre]) genres[primaryGenre] = [];
           genres[primaryGenre].push(movie);
         }
 
+        // Limit movies per row
         for (const genre in genres) {
           genres[genre] = genres[genre]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -43,7 +48,11 @@ const MoviesPage: React.FC = () => {
         if (userId) {
           try {
             const recommendedData = await fetchRecommendedMovies(userId);
-            setRecommended(recommendedData.slice(0, MOVIES_PER_ROW));
+            const enrichedRecommended = recommendedData.map((movie) => {
+              const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
+              return { ...movie, genres };
+            });
+            setRecommended(enrichedRecommended.slice(0, MOVIES_PER_ROW));
           } catch (err) {
             console.warn('Recommended fetch failed:', err);
           }
@@ -51,7 +60,7 @@ const MoviesPage: React.FC = () => {
 
         // Continue Watching
         const localIds = JSON.parse(localStorage.getItem('continueWatching') || '[]');
-        const recent = data.filter((m) => localIds.includes(m.show_id));
+        const recent = enrichedMovies.filter((m) => localIds.includes(m.show_id));
         const ordered = localIds
           .map((id: string) => recent.find((m) => m.show_id === id))
           .filter(Boolean) as MovieCardProps[];

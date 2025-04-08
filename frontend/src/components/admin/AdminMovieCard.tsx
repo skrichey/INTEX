@@ -9,11 +9,11 @@ interface AdminMovieCardProps {
 const AdminMovieCard: React.FC<AdminMovieCardProps> = ({ movie, onClick }) => {
   return (
     <div className="admin-movie-card" onClick={onClick}>
-      <img
-        src={movie.posterUrl || `/posters/${movie.title}.jpg`}
-        alt={movie.title}
-        className="poster-img"
-      />
+        <img
+          src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
+          alt={movie.title}
+          className="poster-img"
+        />
       <p className="fw-bold mt-2 text-center small">{movie.title}</p>
     </div>
   );

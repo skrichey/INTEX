@@ -14,7 +14,7 @@ import {
   deleteMovie
 } from '../api/movieService';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 48;
 
 const AdminMoviesPage: React.FC = () => {
   const [movies, setMovies] = useState<AdminMovie[]>([]);
@@ -96,7 +96,10 @@ const AdminMoviesPage: React.FC = () => {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-
+      <div className="text-center text-light mt-2">
+        Page {currentPage} of {totalPages}
+      </div>
+      
       {selectedMovie && (
         <EditMovieModal
           movie={selectedMovie}

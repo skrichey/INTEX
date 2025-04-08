@@ -7,7 +7,12 @@ type MovieModalProps = {
   onPlay: (movie: MovieCardProps) => void; // ✅ THIS LINE
 };
 
-const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose }) => {
+const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose, onPlay }) => {
+  const handlePlayClick = () => {
+    onPlay(movie);
+    onClose();
+  };
+
   return (
     <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 z-3 px-3">
       <div className="bg-dark text-light rounded shadow-lg overflow-hidden w-100" style={{ maxWidth: '800px' }}>
@@ -69,7 +74,7 @@ const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose }) => {
             </p>
 
             {/* Play Button */}
-            <button className="btn btn-danger mt-2">
+            <button className="btn btn-danger mt-2" onClick={handlePlayClick}>
               ▶️ Play
             </button>
           </div>
