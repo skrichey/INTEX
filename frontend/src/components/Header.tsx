@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Dropdown, FormControl } from 'react-bootstrap';
+import '../styles/Header.css';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isLoggedIn = location.pathname.startsWith('/movies');
+  const isLoggedIn = location.pathname.startsWith('/movies') || location.pathname.startsWith('/admin');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -16,6 +17,7 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
+    localStorage.clear();
     navigate('/');
   };
 

@@ -1,0 +1,68 @@
+/* Header Container */
+.cineniche-header {
+    width: 100%;
+    background: transparent !important;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    position: sticky;
+    top: 0;
+  }
+  
+  /* Logo Style - applies to ANY element with class="logo" */
+  .logo {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #ff4d4d !important;
+    text-decoration: none !important;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    margin: 0;
+  }
+  
+  .logo:hover {
+    text-shadow: 0 0 12px rgba(255, 77, 77, 0.8);
+    transform: scale(1.05);
+  }
+  
+  /* Right section */
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  
+  /* Search bar */
+  .search-container {
+    position: relative;
+  }
+  
+  .search-bar {
+    width: 200px;
+    background-color: #1c1c1c;
+    border: 1px solid #444;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .search-bar:focus {
+    outline: none;
+    box-shadow: 0 0 10px #ff4d4d;
+  }
+  
+  /* Login button */
+  .login-button {
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 6px 14px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #e60000;
+  }
+  

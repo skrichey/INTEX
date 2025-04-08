@@ -16,35 +16,45 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
         <button className="modal-close" onClick={onClose}>×</button>
 
         <div className="modal-content">
-          <img src={movie.poster} alt={movie.title} className="modal-poster" />
+          <img
+            src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
+            alt={movie.title}
+            className="modal-poster"
+          />
           <div className="modal-info">
             <h2>{movie.title}</h2>
 
-            <div className="modal-genres">
-              {movie.genres?.map((genre) => (
-                <span key={genre} className="genre-badge">{genre}</span>
-              ))}
-            </div>
+            {/* Genres */}
+            {movie.genres && movie.genres.length > 0 && (
+              <div className="modal-genres">
+                {movie.genres.map((genre) => (
+                  <span key={genre} className="genre-badge">
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
 
-            <div className="modal-rating">
-  <span className="rating-label">Rating:</span> <span>{movie.rating} / 10</span>
-</div>
+            {/* Rating */}
+            {movie.rating && (
+              <div className="modal-rating">
+                <span className="rating-label">Rating:</span>{' '}
+                <span><span className="text-warning me-1"><FaStar /></span>{movie.rating} / 10</span>
+              </div>
+            )}
 
+            {/* Director & Cast */}
+            <p><strong>Director:</strong> {movie.director || 'Unknown'}</p>
+            <p><strong>Cast:</strong> {movie.cast || 'Unknown'}</p>
 
-            <p><strong>Director:</strong> Unknown</p>
-            <p><strong>Cast:</strong> Unknown</p>
+            {/* Description */}
+            {movie.description && (
+              <p className="modal-description">{movie.description}</p>
+            )}
 
-<div className="modal-right-meta">
-  {movie.cast && (
-    <p><span className="label">Cast:</span> {movie.cast}, <em>more</em></p>
-  )}
-  {movie.genres && (
-    <p><span className="label">Genres:</span> {movie.genres.join(', ')}</p>
-  )}
-</div>
-
+            {/* Play Button */}
             <button className="modal-play" onClick={() => onPlay(movie)}>
-              <FaPlay className="me-2" /> Play
+              <span className="me-2"><FaPlay /></span> Play
             </button>
           </div>
         </div>
