@@ -1,42 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminMovieCard from '../components/admin/AdminMovieCard';
 import EditMovieModal from '../components/admin/EditMovieModal';
-import AddMovieModal from '../components/admin/AddMovie'; // Adjusted path to match the correct location
+import AddMovieModal from '../components/admin/AddMovie';
 import { AdminMovie } from '../types/AdminMovie';
 import { Button } from 'react-bootstrap';
 import "../styles/AdminPage.css";
 
-const mockAdminMovies: AdminMovie[] = [
-  {
-    show_id: 's1',
-    title: 'Inception',
-    posterUrl: '/posters/Inception.jpg',
-    releaseYear: 2010,
-    director: 'Christopher Nolan',
-    rating: 4.8,
-    cast: 'Leonardo DiCaprio, Joseph Gordon-Levitt',
-    genres: ['Sci-Fi', 'Thriller'],
-    duration: '2h 28m',
-    description: 'A thief who steals corporate secrets through dream-sharing tech.',
-  },
-  {
-    show_id: 's2',
-    title: 'The Dark Knight',
-    posterUrl: '/posters/The Dark Knight.jpg',
-    releaseYear: 2008,
-    director: 'Christopher Nolan',
-    rating: 4.9,
-    cast: 'Christian Bale, Heath Ledger',
-    genres: ['Action', 'Crime'],
-    duration: '2h 32m',
-    description: 'Batman faces his greatest psychological and physical tests.',
-  },
-];
+// Import the actual API functions
+import {
+  fetchAdminMovies,
+  addMovie,
+  updateMovie,
+  deleteMovie
+} from '../api/movieService';
 
 const AdminMoviesPage: React.FC = () => {
-  const [movies, setMovies] = useState<AdminMovie[]>(mockAdminMovies);
+  const [movies, setMovies] = useState<AdminMovie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<AdminMovie | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Load movies from the backend
+  useEffect(() => {
+    const loadMovies = async () => {
+      try {
+        const data = await fetchAdminMovies();
+        setMovies(data);
+      } catch (error) {
+        console.error('Failed to fetch movies:', error);
+      }
+    };
+
+    loadMovies();
+  }, []);
 
   const handleOpenModal = (movie: AdminMovie) => {
     setSelectedMovie(movie);
@@ -46,21 +41,36 @@ const AdminMoviesPage: React.FC = () => {
     setSelectedMovie(null);
   };
 
-  const handleUpdate = (updated: AdminMovie) => {
-    setMovies((prev) =>
-      prev.map((m) => (m.show_id === updated.show_id ? updated : m))
-    );
-    handleCloseModal();
+  const handleUpdate = async (updated: AdminMovie) => {
+    try {
+      await updateMovie(updated.show_id, updated);
+      setMovies((prev) =>
+        prev.map((m) => (m.show_id === updated.show_id ? updated : m))
+      );
+      handleCloseModal();
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setMovies((prev) => prev.filter((m) => m.show_id !== id));
-    handleCloseModal();
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteMovie(id);
+      setMovies((prev) => prev.filter((m) => m.show_id !== id));
+      handleCloseModal();
+    } catch (error) {
+      console.error('Delete failed:', error);
+    }
   };
 
-  const handleAdd = (newMovie: AdminMovie) => {
-    setMovies((prev) => [...prev, newMovie]);
-    setShowAddModal(false);
+  const handleAdd = async (newMovie: AdminMovie) => {
+    try {
+      await addMovie(newMovie);
+      setMovies((prev) => [...prev, newMovie]);
+      setShowAddModal(false);
+    } catch (error) {
+      console.error('Add failed:', error);
+    }
   };
 
   return (
