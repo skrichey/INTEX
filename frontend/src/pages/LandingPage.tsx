@@ -1,5 +1,4 @@
-// LandingPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from 'react-bootstrap/Carousel';
 import Footer from '../components/Footer';
@@ -10,6 +9,7 @@ const moviePosters = posterFilenames.map((file) => `/posters/${encodeURIComponen
 
 const LandingPage: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
+
   const toggleBilling = () => setIsAnnual(!isAnnual);
 
   const plans = [
@@ -17,60 +17,106 @@ const LandingPage: React.FC = () => {
       name: 'Essential',
       monthlyPrice: '$7.99/month',
       annualPrice: '$79.99/year',
+      features: {
+        devices: '1',
+        adFree: false,
+        downloads: false,
+        hd: true,
+        ultraHD: false,
+      },
     },
     {
       name: 'Premium',
       monthlyPrice: '$12.99/month',
       annualPrice: '$129.99/year',
+      mostPopular: true,
+      features: {
+        devices: '4',
+        adFree: true,
+        downloads: true,
+        hd: true,
+        ultraHD: true,
+      },
     },
   ];
 
+  useEffect(() => {
+    const revealElements = document.querySelectorAll('.reveal');
+    const handleScroll = () => {
+      revealElements.forEach((el) => {
+        const windowHeight = window.innerHeight;
+        const elementTop = el.getBoundingClientRect().top;
+        const revealPoint = 150;
+        if (elementTop < windowHeight - revealPoint) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToPlans = () => {
+    const planSection = document.getElementById('plans');
+    if (planSection) {
+      planSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="landing-container">
-      {/* Hero Section */}
-      <div className="carousel-wrapper">
-        <Carousel controls={false} indicators={false} fade interval={4000}>
-          {moviePosters.map((poster, index) => (
-            <Carousel.Item key={index}>
-              <div className="carousel-bg" style={{ backgroundImage: `url(${poster})` }} />
-            </Carousel.Item>
-          ))}
-        </Carousel>
-        <div className="overlay" />
+
+      {/* ✅ HERO SECTION */}
+      <div className="hero-section">
+        <div className="carousel-wrapper">
+          <Carousel controls={false} indicators={false} fade interval={4000}>
+            {moviePosters.map((poster, index) => (
+              <Carousel.Item key={index}>
+                <div
+                  className="carousel-bg"
+                  style={{ backgroundImage: `url(${poster})` }}
+                />
+              </Carousel.Item>
+            ))}
+          </Carousel>
+          <div className="overlay" />
+        </div>
+
+        <header className="landing-header">
+          <h2 className="logo">CineNiche</h2>
+          <Link to="/login" className="btn btn-outline-light">Sign In</Link>
+        </header>
+
+        <div className="hero-content text-center">
+          <h1 className="title">Unlimited Movies, Shows & More</h1>
+          <p className="subtitle">Watch anywhere. Cancel anytime.</p>
+          <button onClick={scrollToPlans} className="btn btn-danger btn-lg mt-3">Start Your Free Trial</button>
+        </div>
       </div>
 
-      {/* Header */}
-      <header className="landing-header">
-        <h2 className="logo">CineNiche</h2>
-        <Link to="/login" className="btn btn-outline-light">Sign In</Link>
-      </header>
-
-      {/* Hero Content */}
-      <div className="hero-content text-center">
-        <h1 className="title">Welcome to CineNiche</h1>
-        <p className="subtitle">Stream new releases and timeless classics.</p>
-        <Link to="/login" className="btn btn-danger btn-lg mt-3">Start Your Free Trial</Link>
-      </div>
-
-      {/* Scrollable Sections */}
+      {/* ✅ Scrollable Content */}
       <div className="scroll-content">
-        {/* Featured Content */}
-        <section className="featured-section">
-          <h2 className="section-title">Popular on CineNiche</h2>
+
+        {/* Top Movies */}
+        <section className="featured-section reveal">
+          <h2 className="section-title">Top Movies</h2>
           <div className="horizontal-scroll">
-            {moviePosters.map((poster, idx) => (
+            {moviePosters.slice(3, 9).map((poster, idx) => (
               <div className="featured-card" key={idx}>
-                <img src={poster} alt={`Poster ${idx}`} />
+                <img src={poster} alt={`Top Movie ${idx}`} />
               </div>
             ))}
           </div>
         </section>
 
-        {/* Most Popular TV Shows */}
-        <section className="featured-section">
+        {/* TV Shows */}
+        <section className="featured-section reveal">
           <h2 className="section-title">Most Popular TV Shows</h2>
           <div className="horizontal-scroll">
-            {moviePosters.slice(0, 5).map((poster, idx) => (
+            {moviePosters.map((poster, idx) => (
               <div className="featured-card" key={idx}>
                 <img src={poster} alt={`TV Show ${idx}`} />
               </div>
@@ -78,11 +124,11 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Exclusive Movies */}
-        <section className="featured-section">
+        {/* Exclusives */}
+        <section className="featured-section reveal">
           <h2 className="section-title">Exclusives Only on CineNiche</h2>
           <div className="horizontal-scroll">
-            {moviePosters.slice(5, 10).map((poster, idx) => (
+            {moviePosters.slice().reverse().map((poster, idx) => (
               <div className="featured-card" key={idx}>
                 <img src={poster} alt={`Exclusive ${idx}`} />
               </div>
@@ -91,7 +137,7 @@ const LandingPage: React.FC = () => {
         </section>
 
         {/* Subscription Plans */}
-        <section className="subscription-container text-center">
+        <section id="plans" className="subscription-container text-center reveal">
           <h2 className="section-title">Choose Your Plan</h2>
           <div className="billing-toggle">
             <span>Monthly</span>
@@ -105,13 +151,13 @@ const LandingPage: React.FC = () => {
           <table className="plan-table">
             <thead>
               <tr>
-                <th>Feature</th>
-                {plans.map((plan, index) => (
+                <th>Features</th>
+                {plans.map((plan) => (
                   <th key={plan.name}>
                     {plan.name}
                     <br />
-                    {isAnnual ? plan.annualPrice : plan.monthlyPrice}
-                    {index === 1 && <div className="badge-popular">Most Popular</div>}
+                    <span>{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                    {plan.mostPopular && <div className="badge-popular">Most Popular</div>}
                   </th>
                 ))}
               </tr>
@@ -119,28 +165,31 @@ const LandingPage: React.FC = () => {
             <tbody>
               <tr>
                 <td>Number of Devices</td>
-                <td>1</td>
-                <td>4</td>
+                {plans.map((plan) => <td key={plan.name}>{plan.features.devices}</td>)}
               </tr>
               <tr>
                 <td>Ad-Free Streaming</td>
-                <td style={{ color: 'red' }}>❌</td>
-                <td style={{ color: 'limegreen' }}>✅</td>
+                {plans.map((plan) => (
+                  <td key={plan.name}>{plan.features.adFree ? 'Yes' : 'No'}</td>
+                ))}
               </tr>
               <tr>
                 <td>Offline Downloads</td>
-                <td style={{ color: 'red' }}>❌</td>
-                <td style={{ color: 'limegreen' }}>✅</td>
+                {plans.map((plan) => (
+                  <td key={plan.name}>{plan.features.downloads ? 'Yes' : 'No'}</td>
+                ))}
               </tr>
               <tr>
                 <td>HD Available</td>
-                <td style={{ color: 'limegreen' }}>✅</td>
-                <td style={{ color: 'limegreen' }}>✅</td>
+                {plans.map((plan) => (
+                  <td key={plan.name}>{plan.features.hd ? 'Yes' : 'No'}</td>
+                ))}
               </tr>
               <tr>
                 <td>4K + HDR</td>
-                <td style={{ color: 'red' }}>❌</td>
-                <td style={{ color: 'limegreen' }}>✅</td>
+                {plans.map((plan) => (
+                  <td key={plan.name}>{plan.features.ultraHD ? 'Yes' : 'No'}</td>
+                ))}
               </tr>
               <tr>
                 <td></td>
@@ -154,6 +203,11 @@ const LandingPage: React.FC = () => {
           </table>
         </section>
       </div>
+
+      {/* Floating Button */}
+      <button className="floating-trial-button" onClick={scrollToPlans}>
+        Start Free Trial
+      </button>
 
       <Footer />
     </div>
