@@ -14,7 +14,11 @@ const MovieRow: React.FC<Props> = ({ title, movies }) => {
       <div className="movie-row-container">
         {movies.map((movie) => (
           <div key={movie.show_id} className="movie-card" onClick={movie.onClick}>
-            <img src={movie.poster} alt={movie.title} className="movie-poster" />
+            <img
+              src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
+              alt={movie.title}
+              className="movie-poster"
+            />
           </div>
         ))}
       </div>
