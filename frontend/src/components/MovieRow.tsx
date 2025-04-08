@@ -1,27 +1,24 @@
 import React from 'react';
-import MovieCard from './MovieCard';
 import { MovieCardProps } from '../types/Movie';
+import '../styles/MovieRow.css';
 
-type MovieRowProps = {
+interface Props {
   title: string;
   movies: MovieCardProps[];
-};
+}
 
-const MovieRow: React.FC<MovieRowProps> = ({ title, movies }) => {
+const MovieRow: React.FC<Props> = ({ title, movies }) => {
   return (
-    <div className="mb-5">
-      <h2 className="fs-4 fw-bold text-light mb-3 ms-2">{title}</h2>
-      <div
-        className="d-flex overflow-auto px-2 pb-2"
-        style={{ gap: '1rem', scrollSnapType: 'x mandatory' }}
-      >
+    <section className="movie-row">
+      <h2 className="movie-row-title">{title}</h2>
+      <div className="movie-row-container">
         {movies.map((movie) => (
-          <div key={movie.show_id} style={{ scrollSnapAlign: 'start' }}>
-            <MovieCard {...movie} />
+          <div key={movie.show_id} className="movie-card" onClick={movie.onClick}>
+            <img src={movie.poster} alt={movie.title} className="movie-poster" />
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 

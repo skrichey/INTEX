@@ -1,55 +1,34 @@
 import React from 'react';
 import { MovieCardProps } from '../types/Movie';
+import { FaStar, FaPlay } from 'react-icons/fa';
+import '../styles/MovieModal.css';
 
-type MovieModalProps = {
+interface Props {
   movie: MovieCardProps;
   onClose: () => void;
-  onPlay: (movie: MovieCardProps) => void; // ✅ THIS LINE
-};
+  onPlay: (movie: MovieCardProps) => void;
+}
 
-const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose, onPlay }) => {
-  const handlePlayClick = () => {
-    onPlay(movie);
-    onClose();
-  };
-
+const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
   return (
-    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 z-3 px-3">
-      <div className="bg-dark text-light rounded shadow-lg overflow-hidden w-100" style={{ maxWidth: '800px' }}>
-        {/* Close Button */}
-        <button
-          className="btn-close btn-close-white position-absolute top-0 end-0 m-3"
-          onClick={onClose}
-          aria-label="Close"
-        ></button>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
 
-        {/* Content */}
-        <div className="row g-0">
-          {/* Poster */}
-          <div className="col-md-5">
-            <img
-              src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
-              alt={movie.title}
-              className="img-fluid h-100 object-fit-cover"
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
-
-          {/* Info */}
-          <div className="col-md-7 p-4">
-            <h2 className="h4 fw-bold">{movie.title}</h2>
-            <p className="text-muted small mb-2">
-              {movie.releaseYear} • {movie.duration}
-            </p>
+        <div className="modal-content">
+          <img
+            src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
+            alt={movie.title}
+            className="modal-poster"
+          />
+          <div className="modal-info">
+            <h2>{movie.title}</h2>
 
             {/* Genres */}
-            {(movie.genres?.length ?? 0) > 0 && (
-              <div className="mb-3">
-                {(movie.genres ?? []).map((genre) => (
-                  <span
-                    key={genre}
-                    className="badge bg-danger me-2 mb-2"
-                  >
+            {movie.genres && movie.genres.length > 0 && (
+              <div className="modal-genres">
+                {movie.genres.map((genre) => (
+                  <span key={genre} className="genre-badge">
                     {genre}
                   </span>
                 ))}
@@ -58,24 +37,24 @@ const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose, onPlay }) => {
 
             {/* Rating */}
             {movie.rating && (
-              <p className="text-warning mb-2">
-                ⭐ {movie.rating.toFixed(1)} / 5
-              </p>
+              <div className="modal-rating">
+                <span className="rating-label">Rating:</span>{' '}
+                <span><span className="text-warning me-1"><FaStar /></span>{movie.rating} / 10</span>
+              </div>
             )}
 
-            {/* Description */}
-            <p className="small mb-3">{movie.description}</p>
+            {/* Director & Cast */}
+            <p><strong>Director:</strong> {movie.director || 'Unknown'}</p>
+            <p><strong>Cast:</strong> {movie.cast || 'Unknown'}</p>
 
-            <p className="small text-muted mb-1">
-              <strong>Director:</strong> {movie.director || 'Unknown'}
-            </p>
-            <p className="small text-muted mb-3">
-              <strong>Cast:</strong> {movie.cast || 'Unknown'}
-            </p>
+            {/* Description */}
+            {movie.description && (
+              <p className="modal-description">{movie.description}</p>
+            )}
 
             {/* Play Button */}
-            <button className="btn btn-danger mt-2" onClick={handlePlayClick}>
-              ▶️ Play
+            <button className="modal-play" onClick={() => onPlay(movie)}>
+              <span className="me-2"><FaPlay /></span> Play
             </button>
           </div>
         </div>
