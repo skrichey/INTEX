@@ -4,6 +4,7 @@ import { MovieCardProps } from '../types/Movie';
 type MovieModalProps = {
   movie: MovieCardProps;
   onClose: () => void;
+  onPlay: (movie: MovieCardProps) => void; // ✅ THIS LINE
 };
 
 const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose }) => {
