@@ -24,3 +24,10 @@ export const updateMovie = async (id: string, movie: AdminMovie): Promise<void> 
 export const deleteMovie = async (id: string): Promise<void> => {
   await api.delete(`/movies/${id}`);
 };
+
+// ✅ NEW: Fetch recommended movies for a user
+export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardProps[]> => {
+  const response = await api.get<MovieCardProps[]>(`/Recommendations/${userId}`);
+  return response.data;
+};
+
