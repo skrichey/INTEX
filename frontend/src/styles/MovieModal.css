@@ -1,112 +1,112 @@
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  
-  .modal-container {
-    background-color: #1f1f1f;
-    border-radius: 12px;
-    width: 95%;
-    max-width: 700px;
-    overflow: hidden;
-    position: relative;
-    color: #fff;
-    font-family: 'Helvetica Neue', sans-serif;
-  }
-  
-  .modal-close {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    font-size: 28px;
-    color: #fff;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    z-index: 1001;
-  }
-  
-  .modal-content {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .modal-poster {
-    width: 100%;
-    max-height: 400px; /* keeps it under control */
-    object-fit: cover;
-    display: block;
-    border-bottom: 1px solid #333;
-  }
-  
-  
-  .modal-info {
-    padding: 20px;
-  }
-  
-  .modal-info h2 {
-    font-size: 28px;
-    margin-bottom: 12px;
-  }
-  
-  .modal-genres {
-    margin-bottom: 10px;
-  }
-  
-  .genre-badge {
-    background-color: #e50914;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    margin-right: 8px;
-    font-size: 12px;
-  }
-  
-  .modal-rating {
-    margin-bottom: 14px;
-    font-size: 16px;
-  }
-  
-  .modal-right-meta {
-    margin-top: 14px;
-    font-size: 14px;
-    color: #ccc;
-  }
-  
-  .modal-play {
-    margin-top: 20px;
-    padding: 6px 16px;
-    font-size: 14px;
-    background-color: #e50914;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: background-color 0.2s ease-in-out;
-  }
-  
-  .modal-play:hover {
-    background-color: #b20710;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-container.wide {
+  background-color: #1f1f1f;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 28px;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.modal-content-horizontal {
+  display: flex;
+  flex-direction: row;
+}
+
+.modal-poster-left {
+  width: 40%;
+  height: 100%;
+  object-fit: cover;
+  border-right: 1px solid #333;
+}
+
+.modal-info-right {
+  padding: 24px;
+  flex-grow: 1;
+}
+
+.modal-title {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.modal-meta {
+  font-size: 14px;
+  color: #ccc;
+  margin-bottom: 8px;
+}
+
+.modal-rating {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.modal-genres {
+  margin-bottom: 14px;
+}
+
+.genre-badge {
+  background-color: #e50914;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+.modal-description {
+  font-size: 14px;
+  color: #ddd;
+  margin-bottom: 12px;
+}
+
+.modal-play {
+  margin-top: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  background-color: #e50914;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.modal-play:hover {
+  background-color: #b20710;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

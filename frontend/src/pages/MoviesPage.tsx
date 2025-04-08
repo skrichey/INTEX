@@ -9,23 +9,34 @@ const MAX_CONTINUE_WATCHING = 10;
 const MOVIES_PER_ROW = 10;
 const useDummyData = true;
 
+// ✅ Updated dummyMovies[] with all MovieCardProps fields
+
 const dummyMovies: MovieCardProps[] = [
   {
     show_id: 'm1',
     title: 'Cyber Rebellion',
+    director: 'Alex Mercer',
+    cast: 'Jane Doe, John Smith',
+    releaseYear: 2023,
+    duration: '2h 10m',
+    description: 'In a futuristic society, one rogue hacker must lead the charge against a sentient AI.',
     rating: 8.4,
+    genres: ['Sci-Fi', 'Thriller'],
     posterUrl: '/posters/s1.jpg',
-    genres: ['Sci-Fi'],
   },
   {
     show_id: 'm2',
     title: 'Dreamscape',
+    director: 'Lana Rivers',
+    cast: 'Sam Carter, Lily Moore',
+    releaseYear: 2022,
+    duration: '1h 45m',
+    description: 'A young woman discovers she can control dreams—and accidentally unleashes a nightmare.',
     rating: 7.8,
+    genres: ['Fantasy', 'Drama'],
     posterUrl: '/posters/s2.jpg',
-    genres: ['Fantasy'],
   },
 ];
-
 
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
