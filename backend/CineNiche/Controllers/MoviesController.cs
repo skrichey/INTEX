@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CineNiche.Data;
 using CineNiche.Models;
-using System;
+using System.Linq;
 
 namespace CineNiche.Controllers
 {
@@ -16,19 +16,92 @@ namespace CineNiche.Controllers
             _context = context;
         }
 
+        // GET: api/movies
         [HttpGet]
         public IActionResult GetAllMovies()
         {
-            var movies = _context.movies_titles.ToList();
-            return Ok(movies);
+            var movieDtos = _context.movies_titles
+                .Select(movie => MovieDto.ToDto(movie))
+                .ToList();
+
+            return Ok(movieDtos);
         }
 
+        // GET: api/movies/{id}
         [HttpGet("{id}")]
         public IActionResult GetMovie(string id)
         {
             var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);
-            if (movie == null) return NotFound();
-            return Ok(movie);
+            if (movie == null)
+                return NotFound(new { message = "Movie not found." });
+
+            return Ok(MovieDto.ToDto(movie));
+        }
+
+        // POST: api/movies
+        [HttpPost]
+        public IActionResult AddMovie([FromBody] MovieDto movieDto)
+        {
+            if (_context.movies_titles.Any(m => m.show_id == movieDto.show_id))
+                return BadRequest(new { message = "A movie with this ID already exists." });
+
+            var movie = new Movie
+            {
+                show_id = movieDto.show_id,
+                title = movieDto.title,
+                director = movieDto.director,
+                cast = movieDto.cast,
+                country = movieDto.country,
+                release_year = movieDto.release_year,
+                rating = movieDto.rating,
+                duration = movieDto.duration,
+                description = movieDto.description
+            };
+
+            MovieDto.ApplyGenres(movie, movieDto.genres);
+
+            _context.movies_titles.Add(movie);
+            _context.SaveChanges();
+
+            return CreatedAtAction(nameof(GetMovie), new { id = movie.show_id }, MovieDto.ToDto(movie));
+        }
+
+        // PUT: api/movies/{id}
+        [HttpPut("{id}")]
+        public IActionResult UpdateMovie(string id, [FromBody] MovieDto movieDto)
+        {
+            var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);
+            if (movie == null)
+                return NotFound(new { message = "Movie not found." });
+
+            movie.title = movieDto.title;
+            movie.director = movieDto.director;
+            movie.cast = movieDto.cast;
+            movie.country = movieDto.country;
+            movie.release_year = movieDto.release_year;
+            movie.rating = movieDto.rating;
+            movie.duration = movieDto.duration;
+            movie.description = movieDto.description;
+
+            MovieDto.ApplyGenres(movie, movieDto.genres);
+
+            _context.SaveChanges();
+
+            return Ok(MovieDto.ToDto(movie));
+        }
+
+        // DELETE: api/movies/{id}
+        [HttpDelete("{id}")]
+        public IActionResult DeleteMovie(string id)
+        {
+            var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);
+            if (movie == null)
+                return NotFound(new { message = "Movie not found." });
+
+            _context.movies_titles.Remove(movie);
+            _context.SaveChanges();
+
+            return Ok(new { message = "Movie deleted successfully." });
         }
     }
 }
