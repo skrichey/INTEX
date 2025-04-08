@@ -66,36 +66,50 @@ const LandingPage: React.FC = () => {
     }
   };
 
+  
   return (
     <div className="landing-container">
 
-      {/* ✅ HERO SECTION */}
-      <div className="hero-section">
-        <div className="carousel-wrapper">
-          <Carousel controls={false} indicators={false} fade interval={4000}>
-            {moviePosters.map((poster, index) => (
-              <Carousel.Item key={index}>
-                <div
-                  className="carousel-bg"
-                  style={{ backgroundImage: `url(${poster})` }}
-                />
-              </Carousel.Item>
-            ))}
-          </Carousel>
-          <div className="overlay" />
-        </div>
+{/* ✅ HERO SECTION */}
+<div className="hero-section">
+  <div className="carousel-wrapper">
+    {/* Background Carousel */}
+    <Carousel controls={false} indicators={false} fade interval={4000} pause="hover">
+      {moviePosters.map((poster, index) => (
+        <Carousel.Item key={index}>
+          <div
+            className="carousel-bg"
+            style={{ backgroundImage: `url(${poster})` }}
+          />
+        </Carousel.Item>
+      ))}
+    </Carousel>
 
-        <header className="landing-header">
-          <h2 className="logo">CineNiche</h2>
-          <Link to="/login" className="btn btn-outline-light">Sign In</Link>
-        </header>
+    {/* ✅ Hero Content - stays fixed above carousel */}
+    <div className="hero-content">
+      <h1 className="hero-title">Unlimited movies, TV shows, and more.</h1>
+      <p className="hero-subtitle">Watch anywhere. Cancel anytime.</p>
+      {/* <p className="hero-description">
+        Ready to watch? Enter your email to create or restart your membership.
+      </p> */}
+      <div className="email-form">
+        {/* <input type="email" className="email-input" placeholder="Email address" /> */}
+        <Link to="/login" className="btn btn-danger">Get Started</Link>
 
-        <div className="hero-content text-center">
-          <h1 className="title">Unlimited Movies, Shows & More</h1>
-          <p className="subtitle">Watch anywhere. Cancel anytime.</p>
-          <button onClick={scrollToPlans} className="btn btn-danger btn-lg mt-3">Start Your Free Trial</button>
-        </div>
       </div>
+    </div>
+
+    {/* Optional overlay for readability */}
+    <div className="overlay" />
+  </div>
+
+  <header className="landing-header">
+    <h2 className="logo">CineNiche</h2>
+    <Link to="/login" className="btn btn-outline-light">Sign In</Link>
+  </header>
+</div>
+
+
 
       {/* ✅ Scrollable Content */}
       <div className="scroll-content">
@@ -153,12 +167,17 @@ const LandingPage: React.FC = () => {
               <tr>
                 <th>Features</th>
                 {plans.map((plan) => (
-                  <th key={plan.name}>
-                    {plan.name}
-                    <br />
-                    <span>{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
-                    {plan.mostPopular && <div className="badge-popular">Most Popular</div>}
-                  </th>
+                  <th key={plan.name} className={`plan-header ${plan.mostPopular ? 'most-popular' : ''}`}>
+                  {plan.mostPopular && (
+                    <div className="ribbon">
+                      <span>Most Popular</span>
+                    </div>
+                  )}
+                  {plan.name}
+                  <br />
+                  <span>{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                </th>
+                
                 ))}
               </tr>
             </thead>
@@ -192,13 +211,16 @@ const LandingPage: React.FC = () => {
                 ))}
               </tr>
               <tr>
-                <td></td>
-                {plans.map((plan) => (
-                  <td key={plan.name}>
-                    <button className="btn btn-primary">Select {plan.name}</button>
-                  </td>
-                ))}
-              </tr>
+  <td></td>
+  {plans.map((plan) => (
+    <td key={plan.name}>
+      <Link to="/login" className="btn btn-danger">
+        Select {plan.name}
+      </Link>
+    </td>
+  ))}
+</tr>
+
             </tbody>
           </table>
         </section>
