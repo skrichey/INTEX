@@ -1,6 +1,6 @@
 import { MovieCardProps } from '../types/Movie';
 
-const API_URL = 'https://your-backend-url.azurewebsites.net/api/Movies';
+const API_URL = 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api';
 
 export const POSTER_BASE_URL = "https://cinenicheposters.blob.core.windows.net/posters/";
 
@@ -54,7 +54,7 @@ export const deleteMovie = async (id: string): Promise<void> => {
 
 export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardProps[]> => {
     try {
-      const response = await fetch(`${API_URL}/recommendations/${userId}`);
+      const response = await fetch(`${API_URL}/Recommendations/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch recommendations');
       const data = await response.json();
       return data;
@@ -66,7 +66,7 @@ export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardP
   
   export const fetchAdminMovies = async (): Promise<MovieCardProps[]> => {
     try {
-      const response = await fetch(`${API_URL}/movies`);
+      const response = await fetch(`${API_URL}/Movies`);
       if (!response.ok) throw new Error('Failed to fetch admin movies');
       const data = await response.json();
       return data;
