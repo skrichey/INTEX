@@ -32,7 +32,8 @@ namespace CineNiche.Controllers
         {
             var psi = new ProcessStartInfo
             {
-                FileName = "python",
+                //FileName = "python",
+                FileName = @"D:\home\python3111x64\python.exe",
                 Arguments = $"{GetScriptPath()} {args}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
