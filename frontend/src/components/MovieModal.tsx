@@ -2,6 +2,7 @@ import React from 'react';
 import { MovieCardProps } from '../types/Movie';
 import { FaPlay } from 'react-icons/fa';
 import '../styles/MovieModal.css';
+import { POSTER_BASE_URL } from '../api/movieService';
 
 interface Props {
   movie: MovieCardProps;
@@ -10,13 +11,15 @@ interface Props {
 }
 
 const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
+  const poster = movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
         <div className="modal-content-horizontal">
           <img
-            src={movie.posterUrl || `/posters/${movie.show_id}.jpg`}
+            src={poster}
             alt={movie.title}
             className="modal-poster-left"
           />
@@ -25,16 +28,16 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
 
             {movie.rating && (
               <div className="modal-meta mb-2">
-              {movie.releaseYear && <span>{movie.releaseYear}</span>}
-              {movie.releaseYear && movie.duration && <span className="mx-2">•</span>}
-              {movie.duration && <span>{movie.duration}</span>}
-              {movie.rating && (
-                <>
-                  <span className="mx-2">•</span>
-                  <strong>{movie.rating.toFixed(1)}</strong> / 10
-                </>
-              )}
-            </div>
+                {movie.releaseYear && <span>{movie.releaseYear}</span>}
+                {movie.releaseYear && movie.duration && <span className="mx-2">•</span>}
+                {movie.duration && <span>{movie.duration}</span>}
+                {movie.rating && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <strong>{movie.rating.toFixed(1)}</strong> / 10
+                  </>
+                )}
+              </div>
             )}
 
             {movie.genres && movie.genres.length > 0 && (

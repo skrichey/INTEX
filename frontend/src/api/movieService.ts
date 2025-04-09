@@ -2,6 +2,9 @@ import { MovieCardProps } from '../types/Movie';
 
 const API_URL = 'https://your-backend-url.azurewebsites.net/api/Movies';
 
+export const POSTER_BASE_URL = "https://cinenicheposters.blob.core.windows.net/posters/";
+
+
 export const fetchMovies = async (): Promise<MovieCardProps[]> => {
   try {
     const response = await fetch(API_URL);
