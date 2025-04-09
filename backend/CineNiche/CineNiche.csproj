@@ -35,4 +35,12 @@
 		</None>
 	</ItemGroup>
 
+	<!-- ✅ NEW: Ensure Python script is published -->
+	<ItemGroup>
+		<Content Include="RecommendationEngine\recommend.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>
