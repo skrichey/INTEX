@@ -3,6 +3,7 @@ import { MovieCardProps } from '../types/Movie';
 import { FaPlay } from 'react-icons/fa';
 import '../styles/MovieModal.css';
 import { POSTER_BASE_URL } from '../api/movieService';
+import FallbackImage from './FallbackImage';
 
 interface Props {
   movie: MovieCardProps;
@@ -18,11 +19,13 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
       <div className="modal-container wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
         <div className="modal-content-horizontal">
-          <img
+          <FallbackImage
             src={poster}
             alt={movie.title}
             className="modal-poster-left"
+            title={movie.title}
           />
+
           <div className="modal-info-right">
             <h2 className="modal-title">{movie.title}</h2>
 

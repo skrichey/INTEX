@@ -1,6 +1,7 @@
 import React from 'react';
 import { MovieCardProps } from '../types/Movie';
 import { POSTER_BASE_URL } from '../api/movieService';
+import FallbackImage from './FallbackImage';
 
 const MovieCard: React.FC<MovieCardProps> = ({ show_id, title, posterUrl, onClick }) => {
   const finalPoster = posterUrl || `${POSTER_BASE_URL}${show_id}.jpg`;
@@ -13,12 +14,13 @@ const MovieCard: React.FC<MovieCardProps> = ({ show_id, title, posterUrl, onClic
       onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
-      <img
+      <FallbackImage
         src={finalPoster}
-        className="card-img-top"
         alt={title}
-        style={{ objectFit: 'cover' }}
+        className="card-img-top"
+        title={title}
       />
+
       <div className="card-body p-2">
         <h5 className="card-title text-center text-truncate fs-6 fw-semibold m-0">{title}</h5>
       </div>
