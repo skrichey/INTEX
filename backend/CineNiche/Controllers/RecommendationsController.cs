@@ -2,7 +2,8 @@
 using CineNiche.Data;
 using CineNiche.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Json;
+using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace CineNiche.Controllers
 {
@@ -10,13 +11,13 @@ namespace CineNiche.Controllers
     [ApiController]
     public class RecommendationsController : ControllerBase
     {
-        private readonly HttpClient _httpClient;
         private readonly MovieDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public RecommendationsController(HttpClient httpClient, MovieDbContext context)
+        public RecommendationsController(MovieDbContext context, IWebHostEnvironment env)
         {
-            _httpClient = httpClient;
             _context = context;
+            _env = env;
         }
 
         public class MovieRecommendationRequest
@@ -24,76 +25,122 @@ namespace CineNiche.Controllers
             public string show_id { get; set; }
         }
 
-        public class RecommendationRequest
+        private string GetScriptPath() =>
+            Path.Combine(_env.ContentRootPath, "RecommendationEngine", "recommend.py");
+
+        private string RunPythonScript(string args)
         {
-            public string user_id { get; set; }
+            var psi = new ProcessStartInfo
+            {
+                FileName = "python",
+                Arguments = $"{GetScriptPath()} {args}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(psi);
+            var output = process.StandardOutput.ReadToEnd();
+            var error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            if (!string.IsNullOrWhiteSpace(error))
+                throw new Exception($"Python error: {error}");
+
+            return output;
         }
 
-        // Hybrid: Cold-start or standard recommend
+        // Hybrid or Cold-start
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetRecommendations(int userId)
         {
             if (userId <= 0)
-            {
                 return BadRequest("Invalid user_id.");
-            }
 
             bool hasRatings = await _context.movies_ratings.AnyAsync(r => r.user_id == userId);
+            string mode = hasRatings ? "recommend" : "cold_start";
 
-            var apiEndpoint = hasRatings ? "/recommend" : "/cold_start_recommend";
-
-            object payload = hasRatings
-                ? new { user_id = userId }
-                : new { user_id = userId, is_new_user = true };
-
-            var response = await _httpClient.PostAsJsonAsync($"http://localhost:5000{apiEndpoint}", payload);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var error = await response.Content.ReadAsStringAsync();
-                return StatusCode(500, $"Failed to fetch recommendations from ML API: {error}");
+                var output = RunPythonScript($"--mode {mode} --user_id {userId}");
+                var recs = JsonConvert.DeserializeObject<List<RecommendationDto>>(output);
+                return Ok(recs);
             }
-
-            var recommendations = await response.Content.ReadFromJsonAsync<List<RecommendationDto>>();
-            return Ok(recommendations);
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
-
-        // Recommend by movie ID
+        // Recommend by movie
         [HttpPost("by-movie")]
-        public async Task<IActionResult> GetRecommendationsByMovie([FromBody] MovieRecommendationRequest request)
+        public IActionResult GetRecommendationsByMovie([FromBody] MovieRecommendationRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.show_id))
-            {
                 return BadRequest("Missing show_id.");
-            }
 
-            var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/recommend_by_movie", request);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var error = await response.Content.ReadAsStringAsync();
-                return StatusCode(500, $"Failed to fetch recommendations: {error}");
+                var output = RunPythonScript($"--mode recommend_by_movie --show_id {request.show_id}");
+                var recs = JsonConvert.DeserializeObject<List<RecommendationDto>>(output);
+                return Ok(recs);
             }
-
-            var recommendations = await response.Content.ReadFromJsonAsync<List<RecommendationDto>>();
-            return Ok(recommendations);
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
-        // Top-rated movies
+        // Optional: Top-rated movies (from DB directly)
         [HttpGet("top-rated")]
         public async Task<IActionResult> GetTopRatedMovies()
         {
-            var response = await _httpClient.GetAsync("http://localhost:5000/top_rated");
+            var topRatings = await _context.movies_ratings
+                .GroupBy(r => r.show_id)
+                .Select(g => new
+                {
+                    show_id = g.Key,
+                    avg = g.Average(r => r.rating)
+                })
+                .OrderByDescending(x => x.avg)
+                .Take(10)
+                .ToListAsync();
 
-            if (!response.IsSuccessStatusCode)
+            var shows = await _context.movies_titles
+                .Where(m => topRatings.Select(t => t.show_id).Contains(m.show_id))
+                .ToListAsync();
+
+            var result = shows.Select(m => new RecommendationDto
             {
-                var error = await response.Content.ReadAsStringAsync();
-                return StatusCode(500, $"Failed to fetch top rated movies: {error}");
-            }
+                show_id = m.show_id,
+                title = m.title,
+                director = m.director,
+                cast = m.cast,
+                country = m.country,
+                release_year = m.release_year,
+                rating = m.rating,
+                duration = m.duration,
+                description = m.description,
+                genres = GetGenres(m)
+            }).ToList();
 
-            var topRated = await response.Content.ReadFromJsonAsync<List<RecommendationDto>>();
-            return Ok(topRated);
+            return Ok(result);
+        }
+
+        private List<string> GetGenres(Movie movie)
+        {
+            var genres = new List<string>();
+            var props = typeof(Movie).GetProperties();
+            foreach (var prop in props)
+            {
+                if (prop.PropertyType == typeof(bool) && (bool)(prop.GetValue(movie) ?? false))
+                {
+                    genres.Add(prop.Name.Replace("_", " "));
+                }
+            }
+            return genres;
         }
     }
 }
+
