@@ -18,13 +18,30 @@ namespace CineNiche.Controllers
 
         // GET: api/movies
         [HttpGet]
-        public IActionResult GetAllMovies()
+        public IActionResult GetAllMovies([FromQuery] int page = 1, [FromQuery] int pageSize = 28)
         {
-            var movieDtos = _context.movies_titles
+            if (page <= 0) page = 1;
+            if (pageSize <= 0 || pageSize > 100) pageSize = 28;
+
+            var skip = (page - 1) * pageSize;
+
+            var pagedMovies = _context.movies_titles
+                .OrderBy(m => m.title)
+                .Skip(skip)
+                .Take(pageSize)
                 .Select(movie => MovieDto.ToDto(movie))
                 .ToList();
 
-            return Ok(movieDtos);
+            var totalCount = _context.movies_titles.Count();
+
+            return Ok(new
+            {
+                page,
+                pageSize,
+                totalCount,
+                totalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                movies = pagedMovies
+            });
         }
 
         // GET: api/movies/{id}
