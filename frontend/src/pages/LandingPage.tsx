@@ -10,6 +10,9 @@ import { POSTER_BASE_URL } from '../api/movieService';
 // Real show IDs pulled from your SQLite database
 const movieIds = ['s8382', 's3467', 's3128', 's293', 's7739', 's2917', 's5896', 's2321', 's493', 's7368', 's1267', 's7845'];
 const tvIds = ['s2471', 's4410', 's1707', 's8294', 's3749', 's6', 's7541', 's7484', 's3131', 's821', 's1989', 's2923'];
+const exclusiveIds = ['s8261', 's7204', 's3764', 's6450', 's4948', 's3933', 's1384', 's2796', 's6931', 's1463', 's7259', 's1924'];
+const exclusivePosters = exclusiveIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
+
 
 const moviePosters = movieIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
 const tvShowPosters = tvIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
@@ -125,15 +128,16 @@ const LandingPage: React.FC = () => {
         </section>
 
         <section className="featured-section reveal">
-          <h2 className="section-title">Exclusives Only on CineNiche</h2>
-          <div className="horizontal-scroll">
-            {moviePosters.slice().reverse().map((poster, idx) => (
-              <div className="featured-card" key={idx}>
-                <img src={poster} alt={`Exclusive ${idx}`} />
-              </div>
-            ))}
-          </div>
-        </section>
+  <h2 className="section-title">Exclusives Only on CineNiche</h2>
+  <div className="horizontal-scroll">
+    {exclusivePosters.map((poster, idx) => (
+      <div className="featured-card" key={idx}>
+        <img src={poster} alt={`Exclusive ${idx}`} />
+      </div>
+    ))}
+  </div>
+</section>
+
 
         <section id="plans" className="subscription-container text-center reveal">
           <h2 className="section-title">Choose Your Plan</h2>
