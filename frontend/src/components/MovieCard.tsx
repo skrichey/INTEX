@@ -1,7 +1,10 @@
 import React from 'react';
 import { MovieCardProps } from '../types/Movie';
+import { POSTER_BASE_URL } from '../api/movieService';
 
 const MovieCard: React.FC<MovieCardProps> = ({ show_id, title, posterUrl, onClick }) => {
+  const finalPoster = posterUrl || `${POSTER_BASE_URL}${show_id}.jpg`;
+
   return (
     <div
       className="card bg-dark text-light border-0 shadow-sm"
@@ -11,7 +14,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ show_id, title, posterUrl, onClic
       onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
     >
       <img
-        src={posterUrl || `/posters/${show_id}.jpg`}
+        src={finalPoster}
         className="card-img-top"
         alt={title}
         style={{ objectFit: 'cover' }}

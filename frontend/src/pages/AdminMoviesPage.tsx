@@ -11,7 +11,8 @@ import {
   fetchAdminMovies,
   addMovie,
   updateMovie,
-  deleteMovie
+  deleteMovie,
+  POSTER_BASE_URL
 } from '../api/movieService';
 
 const PAGE_SIZE = 48;
@@ -26,7 +27,13 @@ const AdminMoviesPage: React.FC = () => {
     const loadMovies = async () => {
       try {
         const data = await fetchAdminMovies();
-        const sorted = data.sort((a, b) => a.title.localeCompare(b.title));
+
+        const enriched = data.map((movie) => ({
+          ...movie,
+          posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
+        }));
+
+        const sorted = enriched.sort((a, b) => a.title.localeCompare(b.title));
         setMovies(sorted);
       } catch (error) {
         console.error('Failed to fetch movies:', error);

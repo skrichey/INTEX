@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import MovieRow from '../components/MovieRow';
 import MovieModal from '../components/MovieModal';
 import { MovieCardProps } from '../types/Movie';
-import { fetchMovies, fetchRecommendedMovies } from '../api/movieService';
+import { fetchMovies, fetchRecommendedMovies, POSTER_BASE_URL } from '../api/movieService';
 import genreColumns from '../constants/genreColumns';
 
 const MAX_CONTINUE_WATCHING = 10;
 const MOVIES_PER_ROW = 10;
 const useDummyData = true;
 
-// ✅ Updated dummyMovies[] with all MovieCardProps fields
-
 const dummyMovies: MovieCardProps[] = [
   {
-    show_id: 'm1',
+    show_id: 's1',
     title: 'Cyber Rebellion',
     director: 'Alex Mercer',
     cast: 'Jane Doe, John Smith',
@@ -22,10 +20,10 @@ const dummyMovies: MovieCardProps[] = [
     description: 'In a futuristic society, one rogue hacker must lead the charge against a sentient AI.',
     rating: 8.4,
     genres: ['Sci-Fi', 'Thriller'],
-    posterUrl: '/posters/s1.jpg',
+    posterUrl: `${POSTER_BASE_URL}s1.jpg`,
   },
   {
-    show_id: 'm2',
+    show_id: 's2',
     title: 'Dreamscape',
     director: 'Lana Rivers',
     cast: 'Sam Carter, Lily Moore',
@@ -34,7 +32,7 @@ const dummyMovies: MovieCardProps[] = [
     description: 'A young woman discovers she can control dreams—and accidentally unleashes a nightmare.',
     rating: 7.8,
     genres: ['Fantasy', 'Drama'],
-    posterUrl: '/posters/s2.jpg',
+    posterUrl: `${POSTER_BASE_URL}s2.jpg`,
   },
 ];
 
@@ -56,7 +54,11 @@ const MoviesPage: React.FC = () => {
 
         const enrichedMovies = data.map((movie) => {
           const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
-          return { ...movie, genres };
+          return {
+            ...movie,
+            genres,
+            posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
+          };
         });
 
         const genres: Record<string, MovieCardProps[]> = {};
@@ -81,7 +83,11 @@ const MoviesPage: React.FC = () => {
             const recommendedData = await fetchRecommendedMovies(userId);
             const enrichedRecommended = recommendedData.map((movie) => {
               const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
-              return { ...movie, genres };
+              return {
+                ...movie,
+                genres,
+                posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
+              };
             });
             setRecommended(enrichedRecommended.slice(0, MOVIES_PER_ROW));
           } catch (err) {

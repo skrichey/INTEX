@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Carousel from 'react-bootstrap/Carousel';
 import Footer from '../components/Footer';
-import Header from '../components/Header'; // ✅ Use the shared header
-import posterFilenames from '../types/Posters';
+import Header from '../components/Header';
 import '../styles/LandingPage.css';
 
-const moviePosters = posterFilenames.map((file) => `/posters/${encodeURIComponent(file)}`);
+import { POSTER_BASE_URL } from '../api/movieService';
+
+// Temporary static list of showIds (or fetch these dynamically later)
+const showIds = ['s6701', 's6702', 's6703', 's6704', 's6705', 's6706'];
+const moviePosters = showIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
 
 const LandingPage: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -68,10 +71,8 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-container">
-      {/* ✅ Shared Header */}
       <Header />
 
-      {/* ✅ HERO SECTION */}
       <div className="hero-section">
         <div className="carousel-wrapper">
           <Carousel controls={false} indicators={false} fade interval={4000} pause="hover">
@@ -97,12 +98,11 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ SCROLL CONTENT */}
       <div className="scroll-content">
         <section className="featured-section reveal">
           <h2 className="section-title">Top Movies</h2>
           <div className="horizontal-scroll">
-            {moviePosters.slice(3, 9).map((poster, idx) => (
+            {moviePosters.slice(0, 6).map((poster, idx) => (
               <div className="featured-card" key={idx}>
                 <img src={poster} alt={`Top Movie ${idx}`} />
               </div>
@@ -132,7 +132,6 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ✅ Subscription Plans */}
         <section id="plans" className="subscription-container text-center reveal">
           <h2 className="section-title">Choose Your Plan</h2>
           <div className="billing-toggle">
@@ -204,7 +203,6 @@ const LandingPage: React.FC = () => {
         </section>
       </div>
 
-      {/* ✅ Floating Trial CTA */}
       <button className="floating-trial-button" onClick={scrollToPlans}>
         Start Free Trial
       </button>
