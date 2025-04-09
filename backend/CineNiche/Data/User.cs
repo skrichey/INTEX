@@ -6,6 +6,11 @@ public class User
     [Key]
     public int user_id { get; set; }
     public string? name { get; set; }
+
+    public string? phone { get; set; }
+
+    [Required]
+    public int email { get; set; }
     public int? age { get; set; }
     public string? gender { get; set; }
     public string? city { get; set; }
@@ -25,6 +30,4 @@ public class User
     public bool? AppleTVPlus {  get; set; }
     public bool Peacock { get; set; }
 
-    public string? password { get; set; }
-    public bool is_admin { get; set; }
 }

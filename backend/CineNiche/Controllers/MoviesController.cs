@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using CineNiche.Data;
 using CineNiche.Models;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace CineNiche.Controllers
 
         // GET: api/movies
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult GetAllMovies([FromQuery] int page = 1, [FromQuery] int pageSize = 28)
         {
             if (page <= 0) page = 1;
@@ -46,6 +48,7 @@ namespace CineNiche.Controllers
 
         // GET: api/movies/{id}
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public IActionResult GetMovie(string id)
         {
             var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);
@@ -57,6 +60,7 @@ namespace CineNiche.Controllers
 
         // POST: api/movies
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult AddMovie([FromBody] MovieDto movieDto)
         {
             if (_context.movies_titles.Any(m => m.show_id == movieDto.show_id))
@@ -85,6 +89,7 @@ namespace CineNiche.Controllers
 
         // PUT: api/movies/{id}
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public IActionResult UpdateMovie(string id, [FromBody] MovieDto movieDto)
         {
             var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);
@@ -109,6 +114,7 @@ namespace CineNiche.Controllers
 
         // DELETE: api/movies/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public IActionResult DeleteMovie(string id)
         {
             var movie = _context.movies_titles.FirstOrDefault(m => m.show_id == id);

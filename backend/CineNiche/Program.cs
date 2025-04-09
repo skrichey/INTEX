@@ -1,58 +1,143 @@
-using System;
 using CineNiche.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─────────────────────────────────────────────
-// Configure Services
-// ─────────────────────────────────────────────
+// DB Context Setup
+builder.Services.AddDbContext<MovieDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Identity Setup
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 12;
+    options.Password.RequiredUniqueChars = 1;
+})
+.AddEntityFrameworkStores<MovieDbContext>()
+.AddDefaultTokenProviders();
+
+// Cookie Configuration
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.LoginPath = "/login";
+    options.SlidingExpiration = true;
+    options.Cookie.Name = "AspNetCore.Identity.Application";
+});
+
+// Add Controllers
 builder.Services.AddControllers();
 
-// 🔥 Dynamically resolve DB path for local + Azure
-var dbPath = Path.Combine(AppContext.BaseDirectory, "RecommendationEngine", "Movies.sqlite");
-builder.Services.AddDbContext<MovieDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
+// CORS Configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder => builder
+        .WithOrigins(
+            "http://localhost:5173",
+            "https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
+});
 
-// Swagger for API docs
+// Swagger Setup
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// ✅ CORS for local + deployed frontend
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend",
-        builder => builder
-            .WithOrigins("http://localhost:5173", "https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net")
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-});
-
-// Optional external Flask recommender
-builder.Services.AddHttpClient();
-builder.Services.AddHttpClient("Flask", client =>
-{
-    client.BaseAddress = new Uri("http://localhost:5000/");
-});
-
 var app = builder.Build();
 
-// ─────────────────────────────────────────────
-// Configure Middleware
-// ─────────────────────────────────────────────
-
-app.UseDeveloperExceptionPage(); // 👈 helpful for debugging in production
-
+// Middleware
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Automatically create Identity tables and roles
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+    context.Database.EnsureCreated();
+
+    // Seed roles
+    string[] roles = { "Admin", "User" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    // Optional: Seed admin user
+    var adminEmail = "admin@cineniche.com";
+    var adminPassword = "AdminPassword123!";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+    if (adminUser == null)
+    {
+        var newAdmin = new IdentityUser { UserName = adminEmail, Email = adminEmail };
+        var result = await userManager.CreateAsync(newAdmin, adminPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(newAdmin, "Admin");
+            Console.WriteLine("✅ Admin user created.");
+        }
+        else
+        {
+            Console.WriteLine("❌ Failed to create admin user:");
+            foreach (var error in result.Errors)
+                Console.WriteLine($"- {error.Description}");
+        }
+    }
+}
+
+// HTTPS and HSTS
 app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+// Content Security Policy (CSP)
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("Content-Security-Policy",
+        "default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com;");
+    await next();
+});
+
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
+
+// Custom Auth Endpoints
+app.MapPost("/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+    return Results.Ok(new { message = "Logged out successfully." });
+});
+
+app.MapGet("/pingauth", (HttpContext context) =>
+{
+    if (context.User?.Identity?.IsAuthenticated != true)
+        return Results.Unauthorized();
+
+    return Results.Ok(new { email = context.User.Identity.Name });
+});
+
 app.MapControllers();
 
 app.Run();
