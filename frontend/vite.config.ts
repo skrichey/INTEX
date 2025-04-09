@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5018',
+        target: 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api',
         changeOrigin: true,
         secure: false,
       },

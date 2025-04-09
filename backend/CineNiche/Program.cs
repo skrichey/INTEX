@@ -1,19 +1,24 @@
 using System;
 using CineNiche.Data;
 using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
 // ─────────────────────────────────────────────
 // Configure Services
 // ─────────────────────────────────────────────
-// Add controllers
+
 builder.Services.AddControllers();
+
 // Register DbContext using SQLite
 builder.Services.AddDbContext<MovieDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Add Swagger for API documentation/testing
+
+// Swagger for API docs
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-// Allow CORS for your React frontend
+
+// ✅ CORS for local + deployed frontend
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
@@ -23,27 +28,28 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+// Optional external Flask recommender
 builder.Services.AddHttpClient();
-
 builder.Services.AddHttpClient("Flask", client =>
 {
     client.BaseAddress = new Uri("http://localhost:5000/");
 });
+
 var app = builder.Build();
+
 // ─────────────────────────────────────────────
 // Configure Middleware
 // ─────────────────────────────────────────────
-// Redirect HTTP to HTTPS
-app.UseHttpsRedirection();
-// Enable Swagger in development
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// Enable CORS (must be between UseRouting and UseEndpoints)
-app.UseCors("AllowFrontend");
-app.UseAuthorization();
-app.MapControllers();
-app.UseHttpsRedirection();
+
+app.UseHttpsRedirection();         // 🔐 Force HTTPS early
+app.UseCors("AllowFrontend");      // ✅ Allow frontend requests before routing
+app.UseAuthorization();            // 🔐 Handle auth (if added later)
+app.MapControllers();              // 🎯 Route API calls
+
 app.Run();
