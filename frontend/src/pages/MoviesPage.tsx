@@ -7,34 +7,6 @@ import genreColumns from '../constants/genreColumns';
 
 const MAX_CONTINUE_WATCHING = 10;
 const MOVIES_PER_ROW = 10;
-const useDummyData = true;
-
-const dummyMovies: MovieCardProps[] = [
-  {
-    show_id: 's1',
-    title: 'Cyber Rebellion',
-    director: 'Alex Mercer',
-    cast: 'Jane Doe, John Smith',
-    releaseYear: 2023,
-    duration: '2h 10m',
-    description: 'In a futuristic society, one rogue hacker must lead the charge against a sentient AI.',
-    rating: 8.4,
-    genres: ['Sci-Fi', 'Thriller'],
-    posterUrl: `${POSTER_BASE_URL}s1.jpg`,
-  },
-  {
-    show_id: 's2',
-    title: 'Dreamscape',
-    director: 'Lana Rivers',
-    cast: 'Sam Carter, Lily Moore',
-    releaseYear: 2022,
-    duration: '1h 45m',
-    description: 'A young woman discovers she can control dreams—and accidentally unleashes a nightmare.',
-    rating: 7.8,
-    genres: ['Fantasy', 'Drama'],
-    posterUrl: `${POSTER_BASE_URL}s2.jpg`,
-  },
-];
 
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
@@ -43,15 +15,11 @@ const MoviesPage: React.FC = () => {
   const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>({});
 
   useEffect(() => {
-    if (useDummyData) {
-      setRecommended(dummyMovies);
-      return;
-    }
-
     const loadData = async () => {
       try {
         const data = await fetchMovies();
 
+        // Enrich movies with genres and poster URL
         const enrichedMovies = data.map((movie) => {
           const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
           return {
@@ -61,6 +29,7 @@ const MoviesPage: React.FC = () => {
           };
         });
 
+        // Group by primary genre
         const genres: Record<string, MovieCardProps[]> = {};
         for (const movie of enrichedMovies) {
           const primaryGenre = movie.genres?.[0];
@@ -69,6 +38,7 @@ const MoviesPage: React.FC = () => {
           genres[primaryGenre].push(movie);
         }
 
+        // Limit each genre row to top-rated movies
         for (const genre in genres) {
           genres[genre] = genres[genre]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -77,6 +47,7 @@ const MoviesPage: React.FC = () => {
 
         setGenreMap(genres);
 
+        // Load personalized recommendations
         const userId = localStorage.getItem('userId');
         if (userId) {
           try {
@@ -95,6 +66,7 @@ const MoviesPage: React.FC = () => {
           }
         }
 
+        // Load continue watching list from localStorage
         const localIds = JSON.parse(localStorage.getItem('continueWatching') || '[]');
         const recent = enrichedMovies.filter((m) => localIds.includes(m.show_id));
         const ordered = localIds
@@ -125,37 +97,25 @@ const MoviesPage: React.FC = () => {
 
   return (
     <div className="bg-dark text-light min-vh-100 px-3 pb-5 overflow-auto">
-      {useDummyData ? (
+      {continueWatching.length > 0 && (
         <MovieRow
-          title="Recommended for You"
-          movies={dummyMovies.map((movie) => ({
-            ...movie,
-            onClick: () => handleCardClick(movie),
-          }))}
+          title="Continue Watching"
+          movies={continueWatching.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
         />
-      ) : (
-        <>
-          {continueWatching.length > 0 && (
-            <MovieRow
-              title="Continue Watching"
-              movies={continueWatching.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
-            />
-          )}
-
-          <MovieRow
-            title="Recommended for You"
-            movies={recommended.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
-          />
-
-          {Object.entries(genreMap).map(([genre, genreMovies]) => (
-            <MovieRow
-              key={genre}
-              title={genre}
-              movies={genreMovies.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
-            />
-          ))}
-        </>
       )}
+
+      <MovieRow
+        title="Recommended for You"
+        movies={recommended.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+      />
+
+      {Object.entries(genreMap).map(([genre, genreMovies]) => (
+        <MovieRow
+          key={genre}
+          title={genre}
+          movies={genreMovies.map((movie) => ({ ...movie, onClick: () => handleCardClick(movie) }))}
+        />
+      ))}
 
       {selectedMovie && (
         <MovieModal

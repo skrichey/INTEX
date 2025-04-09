@@ -21,7 +21,9 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, onClose, onAdd }) =
     genres: [],
     rating: 0,
     posterUrl: '',
+    type: 'Movie', // ✅ Required
   });
+  
 
   const handleChange = (key: keyof AdminMovie, value: any) => {
     setNewMovie((prev) => ({
@@ -45,6 +47,7 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, onClose, onAdd }) =
       genres: [],
       rating: 0,
       posterUrl: '',
+      type: 'Movie', // ✅ REQUIRED
     });
   };
 
