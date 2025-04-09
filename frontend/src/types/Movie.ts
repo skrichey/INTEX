@@ -1,4 +1,5 @@
 export type MovieCardProps = {
+    type: string;
     show_id: string;
     title: string;
     director?: string;
