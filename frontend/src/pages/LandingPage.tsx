@@ -7,9 +7,12 @@ import '../styles/LandingPage.css';
 
 import { POSTER_BASE_URL } from '../api/movieService';
 
-// Temporary static list of showIds (or fetch these dynamically later)
-const showIds = ['s6701', 's6702', 's6703', 's6704', 's6705', 's6706'];
-const moviePosters = showIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
+// Real show IDs pulled from your SQLite database
+const movieIds = ['s8382', 's3467', 's3128', 's293', 's7739', 's2917', 's5896', 's2321', 's493', 's7368', 's1267', 's7845'];
+const tvIds = ['s2471', 's4410', 's1707', 's8294', 's3749', 's6', 's7541', 's7484', 's3131', 's821', 's1989', 's2923'];
+
+const moviePosters = movieIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
+const tvShowPosters = tvIds.map((id) => `${POSTER_BASE_URL}${id}.jpg`);
 
 const LandingPage: React.FC = () => {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -102,7 +105,7 @@ const LandingPage: React.FC = () => {
         <section className="featured-section reveal">
           <h2 className="section-title">Top Movies</h2>
           <div className="horizontal-scroll">
-            {moviePosters.slice(0, 6).map((poster, idx) => (
+            {moviePosters.map((poster, idx) => (
               <div className="featured-card" key={idx}>
                 <img src={poster} alt={`Top Movie ${idx}`} />
               </div>
@@ -113,7 +116,7 @@ const LandingPage: React.FC = () => {
         <section className="featured-section reveal">
           <h2 className="section-title">Most Popular TV Shows</h2>
           <div className="horizontal-scroll">
-            {moviePosters.map((poster, idx) => (
+            {tvShowPosters.map((poster, idx) => (
               <div className="featured-card" key={idx}>
                 <img src={poster} alt={`TV Show ${idx}`} />
               </div>
