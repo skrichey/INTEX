@@ -4,7 +4,7 @@ const API_URL = 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net
 
 export const POSTER_BASE_URL = "https://cinenicheposters.blob.core.windows.net/posters/";
 
-
+// Fetch all public movies (if used on landing page etc.)
 export const fetchMovies = async (): Promise<MovieCardProps[]> => {
   try {
     const response = await fetch(API_URL);
@@ -53,26 +53,30 @@ export const deleteMovie = async (id: string): Promise<void> => {
 };
 
 export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardProps[]> => {
-    try {
-      const response = await fetch(`${API_URL}/Recommendations/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch recommendations');
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching recommended movies:', error);
-      return [];
-    }
-  };
-  
-  export const fetchAdminMovies = async (): Promise<MovieCardProps[]> => {
-    try {
-      const response = await fetch(`${API_URL}/Movies`);
-      if (!response.ok) throw new Error('Failed to fetch admin movies');
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching admin movies:', error);
-      return [];
-    }
-  };
-  
+  try {
+    const response = await fetch(`${API_URL}/Recommendations/${userId}`);
+    if (!response.ok) throw new Error('Failed to fetch recommendations');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching recommended movies:', error);
+    return [];
+  }
+};
+
+// ✅ Updated: Fetch admin movies with pagination
+export const fetchAdminMovies = async (currentPage: number, pageSize: number): Promise<{
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  movies: MovieCardProps[];
+}> => {
+  try {
+    const response = await fetch(`${API_URL}/Movies?page=${currentPage}&pageSize=${pageSize}`);
+    if (!response.ok) throw new Error('Failed to fetch admin movies');
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching admin movies:', error);
+    throw error;
+  }
+};

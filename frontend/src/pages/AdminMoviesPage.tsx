@@ -22,25 +22,26 @@ const AdminMoviesPage: React.FC = () => {
   const [selectedMovie, setSelectedMovie] = useState<AdminMovie | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const loadMovies = async () => {
       try {
-        const data = await fetchAdminMovies();
-
-        const enriched = data.map((movie) => ({
+        const data = await fetchAdminMovies(currentPage, PAGE_SIZE); // If paginated
+        const enriched = data.movies.map((movie) => ({
           ...movie,
           posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
         }));
 
         const sorted = enriched.sort((a, b) => a.title.localeCompare(b.title));
         setMovies(sorted);
+        setTotalPages(Math.ceil(data.totalCount / PAGE_SIZE));
       } catch (error) {
         console.error('Failed to fetch movies:', error);
       }
     };
     loadMovies();
-  }, []);
+  }, [currentPage]);
 
   const handleOpenModal = (movie: AdminMovie) => setSelectedMovie(movie);
   const handleCloseModal = () => setSelectedMovie(null);
@@ -75,10 +76,6 @@ const AdminMoviesPage: React.FC = () => {
     }
   };
 
-  const startIdx = (currentPage - 1) * PAGE_SIZE;
-  const currentMovies = movies.slice(startIdx, startIdx + PAGE_SIZE);
-  const totalPages = Math.ceil(movies.length / PAGE_SIZE);
-
   return (
     <div className="admin-page container-fluid py-4 text-white">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -89,7 +86,7 @@ const AdminMoviesPage: React.FC = () => {
       </div>
 
       <div className="admin-movie-grid">
-        {currentMovies.map((movie) => (
+        {movies.map((movie) => (
           <AdminMovieCard
             key={movie.show_id}
             movie={movie}
@@ -106,7 +103,7 @@ const AdminMoviesPage: React.FC = () => {
       <div className="text-center text-light mt-2">
         Page {currentPage} of {totalPages}
       </div>
-      
+
       {selectedMovie && (
         <EditMovieModal
           movie={selectedMovie}
