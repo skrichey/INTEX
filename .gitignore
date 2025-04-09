@@ -45,3 +45,7 @@ public/posters/
 *.db
 *.bak
 *.tmp
+
+# Ignore compiled output folders
+/backend/CineNiche/output/
+/backend/CineNiche/publish/
