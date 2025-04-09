@@ -21,11 +21,18 @@
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 	</ItemGroup>
 
+	<!-- Ensures DB is copied for local runs -->
 	<ItemGroup>
 		<Content Include="RecommendationEngine\Movies.sqlite">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
-</Project>
+	<!-- Ensures DB is included in Azure publish -->
+	<ItemGroup>
+		<None Include="RecommendationEngine\Movies.sqlite">
+			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
 
+</Project>

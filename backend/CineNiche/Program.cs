@@ -10,9 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Register DbContext using SQLite
+// 🔥 Dynamically resolve DB path for local + Azure
+var dbPath = Path.Combine(AppContext.BaseDirectory, "RecommendationEngine", "Movies.sqlite");
 builder.Services.AddDbContext<MovieDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite($"Data Source={dbPath}"));
 
 // Swagger for API docs
 builder.Services.AddEndpointsApiExplorer();
@@ -41,15 +42,17 @@ var app = builder.Build();
 // Configure Middleware
 // ─────────────────────────────────────────────
 
+app.UseDeveloperExceptionPage(); // 👈 helpful for debugging in production
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();         // 🔐 Force HTTPS early
-app.UseCors("AllowFrontend");      // ✅ Allow frontend requests before routing
-app.UseAuthorization();            // 🔐 Handle auth (if added later)
-app.MapControllers();              // 🎯 Route API calls
+app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
