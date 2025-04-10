@@ -81,7 +81,8 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
               )}
               <span className="mx-2">•</span>
               <span>
-                ⭐ {isNumericRating ? movie.rating.toFixed(1) : 'Not Rated'} / 10
+                {isNumericRating ? movie.rating.toFixed(1) : 'Not Rated'} / 5
+
               </span>
             </div>
 
@@ -108,7 +109,8 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
             <div className="user-rating mt-4">
               <p><strong>Rate this movie:</strong></p>
               <div className="rating-options">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+              {[1, 2, 3, 4, 5].map((num) => (
+
                   <button
                     key={num}
                     onClick={() => handleUserRating(num)}
