@@ -15,10 +15,10 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
   const [movie, setMovie] = useState<MovieCardProps>(initialMovie);
   const [userRating, setUserRating] = useState<number | null>(null);
 
-  const isNumericRating = typeof movie.rating === 'number' && !isNaN(movie.rating);
+  const numericRating = parseFloat(String(movie.rating ?? ''));
+  const isNumericRating = !isNaN(numericRating);
   const poster = movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`;
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -26,7 +26,6 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
     };
   }, []);
 
-  // Update modal content if the passed movie changes
   useEffect(() => {
     setMovie(initialMovie);
   }, [initialMovie]);
@@ -38,7 +37,11 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
     const newAverage =
       updatedRatings.reduce((sum, r) => sum + r, 0) / updatedRatings.length;
 
-    const updatedMovie = { ...movie, userRatings: updatedRatings, rating: newAverage };
+    const updatedMovie = {
+      ...movie,
+      userRatings: updatedRatings,
+      rating: parseFloat(newAverage.toFixed(1)),
+    };
     localStorage.setItem(`rating-${movie.show_id}`, JSON.stringify(updatedRatings));
     setMovie(updatedMovie);
     setUserRating(rating);
@@ -52,7 +55,7 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
       } else {
         console.error('Movie data is null');
       }
-      setUserRating(null); // reset user rating
+      setUserRating(null);
     } catch (err) {
       console.error('Failed to load recommended movie:', err);
     }
@@ -76,7 +79,7 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
             <h2 className="modal-title">{movie.title}</h2>
 
             <div className="modal-meta mb-2">
-              {movie.releaseYear && <span>{movie.releaseYear}</span>}
+              {movie.release_year && <span>{movie.release_year}</span>}
               {movie.duration && (
                 <>
                   <span className="mx-2">•</span>
@@ -85,9 +88,13 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
               )}
               <span className="mx-2">•</span>
               <span>
-                {isNumericRating ? (movie.rating ?? 0).toFixed(1) : 'Not Rated'} / 5
-
+                {movie.rating
+                  ? isNumericRating
+                    ? `${numericRating.toFixed(1)} / 5`
+                    : movie.rating
+                  : 'Not Rated'}
               </span>
+
             </div>
 
             {(movie.genres ?? []).length > 0 && (
@@ -113,8 +120,7 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
             <div className="user-rating mt-4">
               <p><strong>Rate this movie:</strong></p>
               <div className="rating-options">
-              {[1, 2, 3, 4, 5].map((num) => (
-
+                {[1, 2, 3, 4, 5].map((num) => (
                   <button
                     key={num}
                     onClick={() => handleUserRating(num)}

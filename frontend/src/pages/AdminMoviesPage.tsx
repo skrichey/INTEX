@@ -31,45 +31,45 @@ const AdminMoviesPage: React.FC = () => {
         let allResults: AdminMovie[] = [];
         let page = 1;
         let hasMore = true;
-  
+
         while (hasMore) {
           const data = await fetchAdminMovies(page, PAGE_SIZE);
           if (!data.movies || data.movies.length === 0) {
             hasMore = false;
             break;
           }
-  
+
           const enriched: AdminMovie[] = data.movies
-            .filter(
-              (movie): movie is AdminMovie =>
-                typeof movie.show_id === 'string' && typeof movie.title === 'string'
+            .filter((movie) =>
+              typeof movie.show_id === 'string' && typeof movie.title === 'string'
             )
-            .map((movie) => ({
+            .map((movie: any): AdminMovie => ({
               ...movie,
               posterUrl: `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
               type: movie.type || 'Unknown',
+              rating: movie.rating !== undefined ? String(movie.rating) : 'N/A',
+              genres: movie.genres ?? [],
             }));
-  
+
           allResults = [...allResults, ...enriched];
-  
+
           if (data.movies.length < PAGE_SIZE) {
             hasMore = false;
           } else {
             page++;
           }
         }
-  
+
         const sorted = allResults.sort((a, b) => a.title.localeCompare(b.title));
         setAllMovies(sorted);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
       }
     };
-  
-    loadMovies();
-  }, []);  
 
-  // Sync search query from localStorage (e.g. when typed in Header)
+    loadMovies();
+  }, []);
+
   useEffect(() => {
     const syncSearch = () => {
       const query = localStorage.getItem('adminSearchQuery') || '';
@@ -101,9 +101,19 @@ const AdminMoviesPage: React.FC = () => {
 
   const handleUpdate = async (updated: AdminMovie) => {
     try {
-      await updateMovie(updated.show_id, updated);
+      await updateMovie(updated.show_id, {
+        ...updated,
+        rating: updated.rating ? Number(updated.rating) : undefined,
+      });
+      const enriched = {
+        ...updated,
+        rating: updated.rating ?? 'N/A',
+        posterUrl: `${POSTER_BASE_URL}${updated.show_id}.jpg?v=${updated.show_id}`,
+        type: updated.type || 'Unknown',
+        genres: updated.genres ?? [],
+      };
       setAllMovies((prev) =>
-        prev.map((m) => (m.show_id === updated.show_id ? updated : m))
+        prev.map((m) => (m.show_id === updated.show_id ? enriched : m))
       );
       handleCloseModal();
     } catch (error) {
@@ -123,8 +133,20 @@ const AdminMoviesPage: React.FC = () => {
 
   const handleAdd = async (newMovie: AdminMovie) => {
     try {
-      await addMovie(newMovie);
-      setAllMovies((prev) => [...prev, newMovie]);
+      await addMovie({
+        ...newMovie,
+        rating: newMovie.rating ? Number(newMovie.rating) : undefined,
+      });
+      const enriched = {
+        ...newMovie,
+        rating: newMovie.rating ?? 'N/A',
+        posterUrl: `${POSTER_BASE_URL}${newMovie.show_id}.jpg?v=${newMovie.show_id}`,
+        type: newMovie.type || 'Unknown',
+        genres: newMovie.genres ?? [],
+      };
+      setAllMovies((prev) =>
+        [...prev, enriched].sort((a, b) => a.title.localeCompare(b.title))
+      );
       setShowAddModal(false);
     } catch (error) {
       console.error('Add failed:', error);
@@ -180,3 +202,4 @@ const AdminMoviesPage: React.FC = () => {
 };
 
 export default AdminMoviesPage;
+

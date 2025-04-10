@@ -2,7 +2,7 @@ export interface MovieCardProps {
   show_id: string;
   title: string;
   description?: string;
-  releaseYear?: number;
+  release_year?: number;
   duration?: string;
   genres?: string[];
   director?: string;
