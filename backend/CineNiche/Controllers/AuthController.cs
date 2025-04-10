@@ -76,37 +76,47 @@ namespace CineNiche.Controllers
             }
         }
 
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        {
-            var email = request.Email.ToLowerInvariant();
-            var user = await _userManager.FindByEmailAsync(email);
+[HttpPost("login")]
+[AllowAnonymous]
+public async Task<IActionResult> Login([FromBody] LoginRequest request)
+{
+    var normalizedEmail = request.Email.Trim().ToUpperInvariant();
 
-            if (user == null)
-                return Unauthorized(new { message = "Invalid credentials." });
+    var user = await _userManager.Users
+        .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
 
-            var result = await _signInManager.PasswordSignInAsync(user, request.Password, true, false);
+    if (user == null)
+    {
+        Console.WriteLine($"[Login] User not found: {normalizedEmail}");
+        return Unauthorized(new { message = "Invalid credentials." });
+    }
 
-            if (!result.Succeeded)
-            {
-                Console.WriteLine($"[Login Failed] User: {email}, " +
-                    $"IsLockedOut: {result.IsLockedOut}, IsNotAllowed: {result.IsNotAllowed}");
-                return Unauthorized(new { message = "Invalid credentials." });
-            }
+    var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
-            };
+    if (!result.Succeeded)
+    {
+        Console.WriteLine($"[Login Failed] User: {user.Email}, Reason: " +
+            $"{(result.IsLockedOut ? "Locked out" : "")} " +
+            $"{(result.IsNotAllowed ? "Not allowed" : "")} " +
+            $"{(!result.Succeeded ? "Invalid credentials" : "")}");
 
-            var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+        return Unauthorized(new { message = "Invalid credentials." });
+    }
 
-            return Ok(new { message = "Login successful!" });
-        }
+    var roles = await _userManager.GetRolesAsync(user);
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
+    };
+
+    var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
+    await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+
+    return Ok(new { message = "Login successful!" });
+}
+
+
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
