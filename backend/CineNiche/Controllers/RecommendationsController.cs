@@ -142,6 +142,26 @@ namespace CineNiche.Controllers
             }
             return genres;
         }
+
+        // GET: api/recommendations/genre?userId=42&genre=Action
+        [HttpGet("genre")]
+        public IActionResult GetGenreRecommendations([FromQuery] int userId, [FromQuery] string genre)
+        {
+            if (userId <= 0 || string.IsNullOrWhiteSpace(genre))
+                return BadRequest("userId and genre are required.");
+
+            try
+            {
+                var output = RunPythonScript($"--mode genre_recommend --user_id {userId} --genre \"{genre}\"");
+                var recs = JsonConvert.DeserializeObject<List<RecommendationDto>>(output);
+                return Ok(recs);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }
 
