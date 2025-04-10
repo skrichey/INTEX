@@ -82,6 +82,9 @@ else
     app.UseHsts();
 }
 
+// ✅ CORS needs to be before any auth or header middleware
+app.UseCors("AllowFrontend");
+
 // CSP Header
 app.Use(async (context, next) =>
 {
@@ -95,7 +98,6 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
