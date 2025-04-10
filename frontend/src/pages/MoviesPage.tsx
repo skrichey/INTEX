@@ -14,15 +14,9 @@ const MOVIES_PER_ROW = 10;
 
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(
-    null
-  );
-  const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>(
-    []
-  );
-  const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>(
-    {}
-  );
+  const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null);
+  const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>([]);
+  const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>({});
 
   useEffect(() => {
     const loadData = async () => {
@@ -31,14 +25,11 @@ const MoviesPage: React.FC = () => {
 
         // Enrich movies with genres and poster URL
         const enrichedMovies = data.map((movie) => {
-          const genres = genreColumns.filter(
-            (col) => (movie as any)[col] === 1
-          );
+          const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
           return {
             ...movie,
             genres,
-            posterUrl:
-              movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
+            posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
           };
         });
 
@@ -74,8 +65,7 @@ const MoviesPage: React.FC = () => {
               return {
                 ...movie,
                 genres,
-                posterUrl:
-                  movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
+                posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
               };
             });
             setRecommended(enrichedRecommended.slice(0, MOVIES_PER_ROW));
@@ -85,12 +75,8 @@ const MoviesPage: React.FC = () => {
         }
 
         // Load continue watching list from localStorage
-        const localIds = JSON.parse(
-          localStorage.getItem('continueWatching') || '[]'
-        );
-        const recent = enrichedMovies.filter((m) =>
-          localIds.includes(m.show_id)
-        );
+        const localIds = JSON.parse(localStorage.getItem('continueWatching') || '[]');
+        const recent = enrichedMovies.filter((m) => localIds.includes(m.show_id));
         const ordered = localIds
           .map((id: string) => recent.find((m) => m.show_id === id))
           .filter(Boolean) as MovieCardProps[];
@@ -108,13 +94,11 @@ const MoviesPage: React.FC = () => {
   };
 
   const handlePlay = (movie: MovieCardProps) => {
-    const existing = JSON.parse(
-      localStorage.getItem('continueWatching') || '[]'
+    const existing = JSON.parse(localStorage.getItem('continueWatching') || '[]');
+    const updated = [movie.show_id, ...existing.filter((id: string) => id !== movie.show_id)].slice(
+      0,
+      MAX_CONTINUE_WATCHING
     );
-    const updated = [
-      movie.show_id,
-      ...existing.filter((id: string) => id !== movie.show_id),
-    ].slice(0, MAX_CONTINUE_WATCHING);
     localStorage.setItem('continueWatching', JSON.stringify(updated));
     setContinueWatching((prev) => {
       const filtered = prev.filter((m) => m.show_id !== movie.show_id);
