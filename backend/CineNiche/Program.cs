@@ -47,7 +47,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", builder => builder
         .WithOrigins(
             "http://localhost:5173",
-            "https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net")
+            "https://proud-bush-0e160501e.6.azurestaticapps.net")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
