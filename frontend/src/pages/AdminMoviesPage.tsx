@@ -23,11 +23,12 @@ const AdminMoviesPage: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadMovies = async () => {
       try {
-        const data = await fetchAdminMovies(currentPage, PAGE_SIZE); // If paginated
+        const data = await fetchAdminMovies(currentPage, PAGE_SIZE);
         const enriched = data.movies.map((movie) => ({
           ...movie,
           posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
@@ -36,12 +37,23 @@ const AdminMoviesPage: React.FC = () => {
         const sorted = enriched.sort((a, b) => a.title.localeCompare(b.title));
         setMovies(sorted);
         setTotalPages(Math.ceil(data.totalCount / PAGE_SIZE));
+
+        const savedQuery = localStorage.getItem("adminSearchQuery") || '';
+        setSearchQuery(savedQuery);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
       }
     };
     loadMovies();
+
+    return () => {
+      localStorage.removeItem("adminSearchQuery"); // optional cleanup
+    };
   }, [currentPage]);
+
+  const filteredMovies = movies.filter((movie) =>
+    movie.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleOpenModal = (movie: AdminMovie) => setSelectedMovie(movie);
   const handleCloseModal = () => setSelectedMovie(null);
@@ -86,7 +98,7 @@ const AdminMoviesPage: React.FC = () => {
       </div>
 
       <div className="admin-movie-grid">
-        {movies.map((movie) => (
+        {filteredMovies.map((movie) => (
           <AdminMovieCard
             key={movie.show_id}
             movie={movie}

@@ -13,9 +13,11 @@ const Header: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setShowDropdown(e.target.value.trim().length > 0);
-  };
+    const query = e.target.value;
+    setSearchQuery(query);
+    setShowDropdown(query.trim().length > 0);
+    localStorage.setItem("adminSearchQuery", query); // 🔥 Store for Admin Page
+  };  
 
   const handleLogout = () => {
     localStorage.clear();
