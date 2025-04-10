@@ -15,11 +15,11 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, onClose, onAdd }) =
     title: '',
     director: '',
     cast: '',
-    releaseYear: new Date().getFullYear(),
+    release_year: new Date().getFullYear(),
     duration: '',
     description: '',
     genres: [],
-    rating: 0,
+    rating: '',
     posterUrl: '',
     type: 'Movie', // ✅ Required
   });
@@ -41,11 +41,11 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, onClose, onAdd }) =
       title: '',
       director: '',
       cast: '',
-      releaseYear: new Date().getFullYear(),
+      release_year: new Date().getFullYear(),
       duration: '',
       description: '',
       genres: [],
-      rating: 0,
+      rating: '',
       posterUrl: '',
       type: 'Movie', // ✅ REQUIRED
     });
@@ -69,7 +69,7 @@ const AddMovieModal: React.FC<AddMovieModalProps> = ({ show, onClose, onAdd }) =
               />
             ) : (
               <Form.Control
-                type={key === 'releaseYear' || key === 'rating' ? 'number' : 'text'}
+                type={key === 'release_year' || key === 'rating' ? 'number' : 'text'}
                 value={key === 'genres' ? (newMovie.genres ?? []).join(', ') : newMovie[key] || ''}
                 onChange={(e) => handleChange(key, e.target.value)}
               />

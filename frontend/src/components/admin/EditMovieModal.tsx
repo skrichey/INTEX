@@ -35,7 +35,7 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ movie, onClose, onUpdat
       <Modal.Body>
         {([
           ['Title', 'title'],
-          ['Year', 'releaseYear'],
+          ['Year', 'release_year'],
           ['Director', 'director'],
           ['Cast', 'cast'],
           ['Genres (comma-separated)', 'genres'],
@@ -55,7 +55,7 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ movie, onClose, onUpdat
               />
             ) : (
               <Form.Control
-                type={key === 'releaseYear' || key === 'rating' ? 'number' : 'text'}
+                type={key === 'release_year' ? 'number' : 'text'}
                 value={
                   key === 'genres'
                     ? (editedMovie.genres ?? []).join(', ')
@@ -69,23 +69,23 @@ const EditMovieModal: React.FC<EditMovieModalProps> = ({ movie, onClose, onUpdat
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
-            Close
+          Close
         </Button>
         <Button variant="primary" onClick={handleSave}>
-            Edit
+          Edit
         </Button>
         <Button
-            variant="danger"
-            onClick={() => {
-            const confirmDelete = window.confirm("Are you sure you want to delete this movie?");
+          variant="danger"
+          onClick={() => {
+            const confirmDelete = window.confirm('Are you sure you want to delete this movie?');
             if (confirmDelete) {
-                onDelete(movie.show_id);
+              onDelete(movie.show_id);
             }
-            }}
+          }}
         >
-        Delete
+          Delete
         </Button>
-        </Modal.Footer>
+      </Modal.Footer>
     </Modal>
   );
 };

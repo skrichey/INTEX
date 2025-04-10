@@ -1,13 +1,14 @@
 export interface AdminMovie {
   show_id: string;
   title: string;
-  type?: string;
   director?: string;
   cast?: string;
-  releaseYear?: number;
+  country?: string;
+  release_year?: number;
   duration?: string;
   description?: string;
-  genres?: string[];
-  rating?: number;
-  posterUrl: string;
+  genres: string[];
+  rating?: string;
+  posterUrl?: string;
+  type?: string;
 }
