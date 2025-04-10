@@ -186,6 +186,8 @@ def cold_start(user_id):
     top_recs = top_shows.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
 
+# -- all previous imports and functions unchanged --
+
 def genre_recommend(user_id, genre):
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
     ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
@@ -199,6 +201,18 @@ def genre_recommend(user_id, genre):
     genre_movies = titles[titles[genre] == 1].copy()
     if genre_movies.empty:
         return []
+
+    # ✅ FIX: Add "combined" column to genre_movies
+    genre_movies["combined"] = (
+        genre_movies["title"].fillna("") + " " +
+        genre_movies["director"].fillna("") + " " +
+        genre_movies["cast"].fillna("") + " " +
+        genre_movies["description"].fillna("") + " " +
+        genre_movies[available_genre_columns].apply(
+            lambda row: ' '.join([g for g in available_genre_columns if row.get(g, 0) == 1]),
+            axis=1
+        )
+    )
 
     user_ratings = ratings[ratings["user_id"] == user_id]
 
@@ -271,6 +285,7 @@ def genre_recommend(user_id, genre):
 
     similar_users = users.sort_values(by="similarity", ascending=False).head(10)
     relevant_ratings = ratings[ratings["user_id"].isin(similar_users["user_id"])]
+
     avg_ratings = relevant_ratings.groupby("show_id")["rating"].mean().reset_index()
     avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
 
@@ -279,6 +294,7 @@ def genre_recommend(user_id, genre):
 
     top_recs = genre_movies.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
+
 
 
 if __name__ == "__main__":
