@@ -12,7 +12,7 @@ const CreateAccountPage = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('https://your-backend-url/api/auth/register', {
+        const response = await axios.post('http://localhost:5018/api/auth/register', {
         email,
         password,
       });

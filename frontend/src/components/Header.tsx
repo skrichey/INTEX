@@ -6,7 +6,10 @@ import '../styles/Header.css';
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAuthenticated = location.pathname.startsWith('/movies') || location.pathname.startsWith('/admin');
+  const path = location.pathname;
+
+  const isAuthenticated = path.startsWith('/movies') || path.startsWith('/admin');
+  const isLanding = path === '/';
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -14,7 +17,7 @@ const Header: React.FC = () => {
   useEffect(() => {
     const stored = localStorage.getItem('adminSearchQuery') || '';
     setSearchQuery(stored);
-  }, [location.pathname]);
+  }, [path]);
 
   // Keep sync if adminSearchQuery changes outside the component (e.g. other tab)
   useEffect(() => {
@@ -66,6 +69,14 @@ const Header: React.FC = () => {
               <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
+        </div>
+      )}
+
+      {isLanding && (
+        <div className="header-right">
+          <Link to="/login" className="btn btn-danger login-button">
+            Login
+          </Link>
         </div>
       )}
     </header>
