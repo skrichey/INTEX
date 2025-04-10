@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace CineNiche.Controllers
 {
@@ -47,13 +48,21 @@ namespace CineNiche.Controllers
 
                 if (!result.Succeeded)
                 {
-                    var errorMessages = result.Errors.Select(e => e.Description);
+                    var errorMessages = result.Errors.Select(e => e.Description).ToList();
+
+                    Console.WriteLine("[Register ERROR] Identity creation failed.");
+                    foreach (var error in errorMessages)
+                    {
+                        Console.WriteLine($" - {error}");
+                    }
+
                     return BadRequest(new
                     {
                         message = "User creation failed.",
                         errors = errorMessages
                     });
                 }
+
 
                 if (!await _roleManager.RoleExistsAsync("User"))
                     await _roleManager.CreateAsync(new IdentityRole("User"));
@@ -76,37 +85,49 @@ namespace CineNiche.Controllers
             }
         }
 
-        [HttpPost("login")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
-        {
-            var email = request.Email.ToLowerInvariant();
-            var user = await _userManager.FindByEmailAsync(email);
+[HttpPost("login")]
+[AllowAnonymous]
+public async Task<IActionResult> Login([FromBody] LoginRequest request)
+{
+    var normalizedEmail = request.Email.Trim().ToUpperInvariant();
 
-            if (user == null)
-                return Unauthorized(new { message = "Invalid credentials." });
+    var user = await _userManager.Users
+        .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
 
-            var result = await _signInManager.PasswordSignInAsync(user, request.Password, true, false);
+    if (user == null)
+    {
+        Console.WriteLine($"[Login] User not found: {normalizedEmail}");
+        return Unauthorized(new { message = "Invalid credentials." });
+    }
 
-            if (!result.Succeeded)
-            {
-                Console.WriteLine($"[Login Failed] User: {email}, " +
-                    $"IsLockedOut: {result.IsLockedOut}, IsNotAllowed: {result.IsNotAllowed}");
-                return Unauthorized(new { message = "Invalid credentials." });
-            }
+    var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
+    Console.WriteLine($"PasswordSignIn Result: Succeeded={result.Succeeded}, IsLockedOut={result.IsLockedOut}, IsNotAllowed={result.IsNotAllowed}, RequiresTwoFactor={result.RequiresTwoFactor}");
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
-            };
 
-            var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+    if (!result.Succeeded)
+    {
+        Console.WriteLine($"[Login Failed] User: {user.Email}, Reason: " +
+            $"{(result.IsLockedOut ? "Locked out" : "")} " +
+            $"{(result.IsNotAllowed ? "Not allowed" : "")} " +
+            $"{(!result.Succeeded ? "Invalid credentials" : "")}");
 
-            return Ok(new { message = "Login successful!" });
-        }
+        return Unauthorized(new { message = "Invalid credentials." });
+    }
+
+    var roles = await _userManager.GetRolesAsync(user);
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
+    };
+
+    var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
+    await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+
+    return Ok(new { message = "Login successful!" });
+}
+
+
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()

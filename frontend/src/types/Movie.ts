@@ -15,4 +15,5 @@ export interface MovieCardProps {
     posterUrl?: string;
   }>;
   userRatings?: number[]; // Added userRatings property
+  onClick?: () => void; // Add onClick property as optional
 }

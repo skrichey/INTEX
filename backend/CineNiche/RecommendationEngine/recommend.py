@@ -7,18 +7,25 @@ from pathlib import Path
 from sqlalchemy import create_engine
 
 GENRE_COLUMNS = [
-    "Action", "Adventure", "Anime Series International TV Shows",
-    "British TV Shows Docuseries International TV Shows", "Children",
-    "Comedies", "Comedies Dramas International Movie", "Comedies International Movies",
-    "Comedies Romantic Movies", "Crime TV Shows Docuseries", "Documentaries",
-    "Documentaries International Movies", "Docuseries", "Dramas",
-    "Dramas International Movies", "Dramas Romantic Movies", "Family Movies", "Fantasy",
-    "Horror Movies", "International Movies Thrillers",
-    "International TV Shows Romantic TV Shows TV Dramas", "Kids' TV",
-    "Language TV Shows", "Musicals", "Nature TV", "Reality TV",
-    "Spirituality", "TV Action", "TV Comedies", "TV Dramas",
-    "Talk Shows TV Comedies", "Thrillers"
+    "Action",
+    "Children",
+    "Comedies",
+    "Documentaries",
+    "Docuseries",
+    "Dramas",
+    "Family Movies",
+    "Fantasy",
+    "Horror Movies",
+    "Musicals",
+    "Nature TV",
+    "Reality TV",
+    "Spirituality",
+    "TV Action",
+    "TV Comedies",
+    "TV Dramas",
+    "Thrillers"
 ]
+
 
 def extract_genres(row):
     return [genre for genre in GENRE_COLUMNS if genre in row and row[genre] == 1]

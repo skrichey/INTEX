@@ -1,145 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import MovieRow from '../components/MovieRow';
-import MovieModal from '../components/MovieModal';
+import React, { useEffect, useState } from 'react';
+import '../styles/MoviePage.css';
+import GenreRow from '../components/GenreRow';
+import RecommendedRow from '../components/RecommendedRow';
 import { MovieCardProps } from '../types/Movie';
-import {
-  fetchMovies,
-  fetchRecommendedMovies,
-  POSTER_BASE_URL,
-} from '../api/movieService';
-import genreColumns from '../constants/genreColumns';
-
-const MAX_CONTINUE_WATCHING = 10;
-const MOVIES_PER_ROW = 10;
+import { fetchGenreRecommendations } from '../api/movieService';
 
 const MoviesPage: React.FC = () => {
-  const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null); // ✅ Changed type here
-  const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>([]);
-  const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>({});
+  const [genreRecommendations, setGenreRecommendations] = useState<Record<string, MovieCardProps[]>>({});
+  const genres: string[] = [
+    'Action', 'Animation', 'Biography', 'Comedy', 'Crime', 'Documentary', 'Drama',
+    'Family', 'Fantasy', 'Film-Noir', 'History', 'Horror', 'Music', 'Musical', 'Mystery',
+    'News', 'Reality-TV', 'Romance', 'Sci-Fi', 'Short', 'Sport', 'Talk-Show', 'Thriller',
+    'War', 'Western', 'Game-Show', 'Lifestyle', 'Travel', 'Superhero', 'Teen', 'Holiday'
+  ];
 
+  // Fetch genre recommendations only once per genre
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchMovies();
+    genres.forEach((genre) => {
+      // Skip if genre is already loaded
+      if (genreRecommendations[genre]) return;
 
-        const enrichedMovies = data.map((movie) => {
-          const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
-          return {
-            ...movie,
-            genres,
-            posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
-          };
-        });
-
-        const genres: Record<string, MovieCardProps[]> = {};
-        for (const movie of enrichedMovies) {
-          const primaryGenre = movie.genres?.[0];
-          if (!primaryGenre) continue;
-          if (!genres[primaryGenre]) genres[primaryGenre] = [];
-          genres[primaryGenre].push(movie);
+      // Fetch recommendations for each genre if not already loaded
+      const fetchMoviesForGenre = async () => {
+        try {
+          const movies = await fetchGenreRecommendations(genre);
+          setGenreRecommendations((prev) => ({
+            ...prev,
+            [genre]: movies,
+          }));
+        } catch (err) {
+          console.warn(`Error fetching movies for genre: ${genre}`, err);
         }
-
-        for (const genre in genres) {
-          genres[genre] = genres[genre]
-            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-            .slice(0, MOVIES_PER_ROW);
-        }
-
-        setGenreMap(genres);
-
-        localStorage.setItem('userId', '1');
-        const userId = localStorage.getItem('userId');
-        if (userId) {
-          try {
-            const recommendedData = await fetchRecommendedMovies(userId);
-            const enrichedRecommended = recommendedData.map((movie) => {
-              const genres = Array.isArray(movie.genres)
-                ? movie.genres
-                : genreColumns.filter((col) => (movie as any)[col] === 1);
-              return {
-                ...movie,
-                genres,
-                posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
-              };
-            });
-            setRecommended(enrichedRecommended.slice(0, MOVIES_PER_ROW));
-          } catch (err) {
-            console.warn('Recommended fetch failed:', err);
-          }
-        }
-
-        const localIds = JSON.parse(localStorage.getItem('continueWatching') || '[]');
-        const recent = enrichedMovies.filter((m) => localIds.includes(m.show_id));
-        const ordered = localIds
-          .map((id: string) => recent.find((m) => m.show_id === id))
-          .filter(Boolean) as MovieCardProps[];
-        setContinueWatching(ordered);
-      } catch (error) {
-        console.error('Failed to load movies:', error);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const handleCardClick = (movie: MovieCardProps) => {
-    setSelectedMovie(movie); // ✅ Works now
-  };
-
-  const handlePlay = (movie: MovieCardProps) => {
-    const existing = JSON.parse(localStorage.getItem('continueWatching') || '[]');
-    const updated = [movie.show_id, ...existing.filter((id: string) => id !== movie.show_id)].slice(
-      0,
-      MAX_CONTINUE_WATCHING
-    );
-    localStorage.setItem('continueWatching', JSON.stringify(updated));
-    setContinueWatching((prev) => {
-      const filtered = prev.filter((m) => m.show_id !== movie.show_id);
-      return [movie, ...filtered].slice(0, MAX_CONTINUE_WATCHING);
+      };
+      fetchMoviesForGenre();
     });
-  };
+  }, [genreRecommendations, genres]);
 
   return (
-    <div className="bg-dark text-light min-vh-100 px-3 pb-5 overflow-auto">
-      {continueWatching.length > 0 && (
-        <MovieRow
-          title="Continue Watching"
-          movies={continueWatching.map((movie) => ({
-            ...movie,
-            onClick: () => handleCardClick(movie),
-          }))}
-        />
-      )}
+    <div className="movies-page">
+      {/* Recommended and Continue Watching rows */}
+      <div className="movies-header">
+        <RecommendedRow movies={[]} />
+      </div>
 
-      {recommended.length > 0 && (
-        <MovieRow
-          title="Recommended for You"
-          movies={recommended.map((movie) => ({
-            ...movie,
-            onClick: () => handleCardClick(movie),
-          }))}
-        />
-      )}
-
-      {Object.entries(genreMap).map(([genre, genreMovies]) => (
-        <MovieRow
-          key={genre}
-          title={genre}
-          movies={genreMovies.map((movie) => ({
-            ...movie,
-            onClick: () => handleCardClick(movie),
-          }))}
-        />
-      ))}
-
-      {selectedMovie && (
-        <MovieModal
-          movie={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
-          onPlay={handlePlay}
-        />
-      )}
+      {/* Genre rows */}
+      <div className="genre-rows">
+        {genres.map((genre) => (
+          <GenreRow
+            key={genre}
+            title={`Top Picks in ${genre}`}
+            movies={genreRecommendations[genre] || []}
+          />
+        ))}
+      </div>
     </div>
   );
 };

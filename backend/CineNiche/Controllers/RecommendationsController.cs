@@ -14,6 +14,28 @@ namespace CineNiche.Controllers
         private readonly MovieDbContext _context;
         private readonly IWebHostEnvironment _env;
 
+        // ✅ Genre whitelist to prevent invalid Python errors
+        private static readonly HashSet<string> ValidGenres = new()
+        {
+            "Action",
+            "Children",
+            "Comedies",
+            "Documentaries",
+            "Docuseries",
+            "Dramas",
+            "Family Movies",
+            "Fantasy",
+            "Horror Movies",
+            "Musicals",
+            "Nature TV",
+            "Reality TV",
+            "Spirituality",
+            "TV Action",
+            "TV Comedies",
+            "TV Dramas",
+            "Thrillers"
+        };
+
         public RecommendationsController(MovieDbContext context, IWebHostEnvironment env)
         {
             _context = context;
@@ -32,7 +54,6 @@ namespace CineNiche.Controllers
         {
             var psi = new ProcessStartInfo
             {
-                //FileName = "python",
                 FileName = @"D:\home\python3111x64\python.exe",
                 Arguments = $"{GetScriptPath()} {args}",
                 RedirectStandardOutput = true,
@@ -150,6 +171,9 @@ namespace CineNiche.Controllers
             if (userId <= 0 || string.IsNullOrWhiteSpace(genre))
                 return BadRequest("userId and genre are required.");
 
+            if (!ValidGenres.Contains(genre))
+                return BadRequest($"Invalid genre: '{genre}'. Please select a valid genre.");
+
             try
             {
                 var output = RunPythonScript($"--mode genre_recommend --user_id {userId} --genre \"{genre}\"");
@@ -162,6 +186,11 @@ namespace CineNiche.Controllers
             }
         }
 
+        // Optional: expose the valid genres
+        [HttpGet("genres")]
+        public IActionResult GetAvailableGenres()
+        {
+            return Ok(ValidGenres.ToList());
+        }
     }
 }
-

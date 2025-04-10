@@ -20,7 +20,7 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5018/api/auth/register', {
+      const response = await axios.post('https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api/auth/register', {
         email,
         password,
       });
