@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
       );
 
       console.log(response.data.message);
-      navigate('/'); // Navigate to home or dashboard after successful login
+      navigate('/movies'); // Navigate to home or dashboard after successful login
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
     }
