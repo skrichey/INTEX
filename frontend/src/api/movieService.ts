@@ -1,6 +1,6 @@
 import { MovieCardProps } from '../types/Movie';
 
-const API_URL = 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api';
+export const API_URL = 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api';
 
 export const POSTER_BASE_URL =
   'https://cinenicheposters.blob.core.windows.net/posters/';

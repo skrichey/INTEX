@@ -14,6 +14,21 @@ namespace CineNiche.Controllers
         private readonly MovieDbContext _context;
         private readonly IWebHostEnvironment _env;
 
+        // ✅ Genre whitelist to prevent invalid Python errors
+        private static readonly HashSet<string> ValidGenres = new()
+        {
+            "Action", "Adventure", "Anime Series International TV Shows",
+            "British TV Shows Docuseries International TV Shows", "Children",
+            "Comedies", "Comedies Dramas International Movie", "Comedies International Movies",
+            "Comedies Romantic Movies", "Crime TV Shows Docuseries", "Documentaries",
+            "Documentaries International Movies", "Docuseries", "Dramas", "Dramas International Movies",
+            "Dramas Romantic Movies", "Family Movies", "Fantasy", "Horror Movies",
+            "International Movies Thrillers", "International TV Shows Romantic TV Shows TV Dramas",
+            "Kids' TV", "Language TV Shows", "Musicals", "Nature TV", "Reality TV",
+            "Spirituality", "TV Action", "TV Comedies", "TV Dramas",
+            "Talk Shows TV Comedies", "Thrillers"
+        };
+
         public RecommendationsController(MovieDbContext context, IWebHostEnvironment env)
         {
             _context = context;
@@ -32,7 +47,6 @@ namespace CineNiche.Controllers
         {
             var psi = new ProcessStartInfo
             {
-                //FileName = "python",
                 FileName = @"D:\home\python3111x64\python.exe",
                 Arguments = $"{GetScriptPath()} {args}",
                 RedirectStandardOutput = true,
@@ -150,6 +164,9 @@ namespace CineNiche.Controllers
             if (userId <= 0 || string.IsNullOrWhiteSpace(genre))
                 return BadRequest("userId and genre are required.");
 
+            if (!ValidGenres.Contains(genre))
+                return BadRequest($"Invalid genre: '{genre}'. Please select a valid genre.");
+
             try
             {
                 var output = RunPythonScript($"--mode genre_recommend --user_id {userId} --genre \"{genre}\"");
@@ -162,6 +179,11 @@ namespace CineNiche.Controllers
             }
         }
 
+        // Optional: expose the valid genres
+        [HttpGet("genres")]
+        public IActionResult GetAvailableGenres()
+        {
+            return Ok(ValidGenres.ToList());
+        }
     }
 }
-
