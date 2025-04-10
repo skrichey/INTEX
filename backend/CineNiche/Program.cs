@@ -82,20 +82,22 @@ else
     app.UseHsts();
 }
 
+// ✅ CORS needs to be before any auth or header middleware
+app.UseCors("AllowFrontend");
+
 // CSP Header
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["Content-Security-Policy"] =
-        @"default-src 'self';
-          style-src 'self' 'unsafe-inline';
-          font-src 'self';
-          img-src 'self';
-          script-src 'self';
-          connect-src 'self';";
+    context.Response.Headers["Content-Security-Policy"] = string.Join(" ",
+        "default-src 'self';",
+        "style-src 'self' 'unsafe-inline';",
+        "font-src 'self';",
+        "img-src 'self';",
+        "script-src 'self';",
+        "connect-src 'self';");
     await next();
 });
 
-app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -48,7 +48,7 @@ const MoviesPage: React.FC = () => {
         setGenreMap(genres);
 
         // Load personalized recommendations
-        const userId = localStorage.getItem('userId');
+        const userId = localStorage.getItem('1');
         if (userId) {
           try {
             const recommendedData = await fetchRecommendedMovies(userId);
