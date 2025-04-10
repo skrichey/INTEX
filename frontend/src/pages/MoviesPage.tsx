@@ -14,7 +14,7 @@ const MOVIES_PER_ROW = 10;
 
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<string | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null); // ✅ Changed type here
   const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>([]);
   const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>({});
 
@@ -23,7 +23,6 @@ const MoviesPage: React.FC = () => {
       try {
         const data = await fetchMovies();
 
-        // Enrich movies with genres and poster URL
         const enrichedMovies = data.map((movie) => {
           const genres = genreColumns.filter((col) => (movie as any)[col] === 1);
           return {
@@ -33,7 +32,6 @@ const MoviesPage: React.FC = () => {
           };
         });
 
-        // Group by primary genre
         const genres: Record<string, MovieCardProps[]> = {};
         for (const movie of enrichedMovies) {
           const primaryGenre = movie.genres?.[0];
@@ -42,7 +40,6 @@ const MoviesPage: React.FC = () => {
           genres[primaryGenre].push(movie);
         }
 
-        // Limit each genre row to top-rated movies
         for (const genre in genres) {
           genres[genre] = genres[genre]
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
@@ -51,13 +48,11 @@ const MoviesPage: React.FC = () => {
 
         setGenreMap(genres);
 
-        // Load personalized recommendations
-        localStorage.setItem('userId', '1'); // TEMPORARY JUST FOR TESTING
+        localStorage.setItem('userId', '1');
         const userId = localStorage.getItem('userId');
         if (userId) {
           try {
             const recommendedData = await fetchRecommendedMovies(userId);
-            console.log('Fetched movies data:', recommendedData);
             const enrichedRecommended = recommendedData.map((movie) => {
               const genres = Array.isArray(movie.genres)
                 ? movie.genres
@@ -74,7 +69,6 @@ const MoviesPage: React.FC = () => {
           }
         }
 
-        // Load continue watching list from localStorage
         const localIds = JSON.parse(localStorage.getItem('continueWatching') || '[]');
         const recent = enrichedMovies.filter((m) => localIds.includes(m.show_id));
         const ordered = localIds
@@ -90,7 +84,7 @@ const MoviesPage: React.FC = () => {
   }, []);
 
   const handleCardClick = (movie: MovieCardProps) => {
-    setSelectedMovie(movie);
+    setSelectedMovie(movie); // ✅ Works now
   };
 
   const handlePlay = (movie: MovieCardProps) => {
