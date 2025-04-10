@@ -17,16 +17,23 @@ namespace CineNiche.Controllers
         // ✅ Genre whitelist to prevent invalid Python errors
         private static readonly HashSet<string> ValidGenres = new()
         {
-            "Action", "Adventure", "Anime Series International TV Shows",
-            "British TV Shows Docuseries International TV Shows", "Children",
-            "Comedies", "Comedies Dramas International Movie", "Comedies International Movies",
-            "Comedies Romantic Movies", "Crime TV Shows Docuseries", "Documentaries",
-            "Documentaries International Movies", "Docuseries", "Dramas", "Dramas International Movies",
-            "Dramas Romantic Movies", "Family Movies", "Fantasy", "Horror Movies",
-            "International Movies Thrillers", "International TV Shows Romantic TV Shows TV Dramas",
-            "Kids' TV", "Language TV Shows", "Musicals", "Nature TV", "Reality TV",
-            "Spirituality", "TV Action", "TV Comedies", "TV Dramas",
-            "Talk Shows TV Comedies", "Thrillers"
+            "Action",
+            "Children",
+            "Comedies",
+            "Documentaries",
+            "Docuseries",
+            "Dramas",
+            "Family Movies",
+            "Fantasy",
+            "Horror Movies",
+            "Musicals",
+            "Nature TV",
+            "Reality TV",
+            "Spirituality",
+            "TV Action",
+            "TV Comedies",
+            "TV Dramas",
+            "Thrillers"
         };
 
         public RecommendationsController(MovieDbContext context, IWebHostEnvironment env)
