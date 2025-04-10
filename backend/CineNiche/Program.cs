@@ -28,7 +28,7 @@ builder.Services.AddAuthentication()
     {
         googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
         googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-    });
+     });
 
 // Cookie Configuration
 builder.Services.ConfigureApplicationCookie(options =>
@@ -82,7 +82,7 @@ else
     app.UseHsts();
 }
 
-// ✅ CORS needs to be before any auth or header middleware
+// ✅ CORS before auth
 app.UseCors("AllowFrontend");
 
 // CSP Header
@@ -101,7 +101,7 @@ app.Use(async (context, next) =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Custom Auth Endpoints
+// Auth endpoints
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(IdentityConstants.ApplicationScheme);
@@ -118,16 +118,12 @@ app.MapGet("/pingauth", (HttpContext context) =>
 
 app.MapControllers();
 
-// Seed roles + admin user
+// Role seeding (optional, safe to leave in)
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
-    context.Database.EnsureCreated();
-
-    string[] roles = { "Admin", "User" };
+    string[] roles = { "Admin", "Customer" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -135,27 +131,7 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
-
-    var adminEmail = "admin@cineniche.com";
-    var adminPassword = "AdminPassword123!";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    if (adminUser == null)
-    {
-        var newAdmin = new IdentityUser { UserName = adminEmail, Email = adminEmail };
-        var result = await userManager.CreateAsync(newAdmin, adminPassword);
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(newAdmin, "Admin");
-            Console.WriteLine("✅ Admin user created.");
-        }
-        else
-        {
-            Console.WriteLine("❌ Failed to create admin user:");
-            foreach (var error in result.Errors)
-                Console.WriteLine($"- {error.Description}");
-        }
-    }
 }
 
 app.Run();
+

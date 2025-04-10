@@ -186,12 +186,107 @@ def cold_start(user_id):
     top_recs = top_shows.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
 
+def genre_recommend(user_id, genre):
+    titles = pd.read_sql("SELECT * FROM movies_titles", engine)
+    ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
+    users = pd.read_sql("SELECT * FROM movies_users", engine)
+
+    available_genre_columns = [col for col in GENRE_COLUMNS if col in titles.columns]
+    if genre not in available_genre_columns:
+        return []
+
+    # Filter to genre-specific movies
+    genre_movies = titles[titles[genre] == 1].copy()
+    if genre_movies.empty:
+        return []
+
+    user_ratings = ratings[ratings["user_id"] == user_id]
+
+    # If user has rated movies, build a content-based user profile
+    if not user_ratings.empty:
+        titles["combined"] = (
+            titles["title"].fillna("") + " " +
+            titles["director"].fillna("") + " " +
+            titles["cast"].fillna("") + " " +
+            titles["description"].fillna("") + " " +
+            titles[available_genre_columns].apply(
+                lambda row: ' '.join([g for g in available_genre_columns if row.get(g, 0) == 1]),
+                axis=1
+            )
+        )
+
+        tfidf = TfidfVectorizer(stop_words="english")
+        tfidf_matrix = tfidf.fit_transform(titles["combined"])
+
+        top_user_ratings = user_ratings.sort_values(by="rating", ascending=False).head(3)
+        top_indices = titles[titles["show_id"].isin(top_user_ratings["show_id"])].index.tolist()
+        if not top_indices:
+            return []
+
+        user_profile_vector = tfidf_matrix[top_indices].mean(axis=0)
+        genre_tfidf = tfidf.transform(genre_movies["combined"])
+        content_scores = cosine_similarity(user_profile_vector, genre_tfidf).flatten()
+
+        genre_movies["content_score"] = content_scores
+
+        avg_ratings = ratings.groupby("show_id")["rating"].mean().reset_index()
+        genre_movies = pd.merge(genre_movies, avg_ratings, on="show_id", how="left")
+        genre_movies["rating"] = genre_movies["rating"].fillna(0)
+
+        scaler = MinMaxScaler()
+        genre_movies[["content_score", "rating"]] = scaler.fit_transform(genre_movies[["content_score", "rating"]])
+        genre_movies["hybrid_score"] = 0.6 * genre_movies["content_score"] + 0.4 * genre_movies["rating"]
+
+        top_recs = genre_movies.sort_values(by="hybrid_score", ascending=False).head(10)
+        return build_response(top_recs)
+
+    # Cold-start: no ratings yet
+    current_user = users[users["user_id"] == user_id].copy()
+    if current_user.empty:
+        return []
+
+    features = ["age", "gender", "city", "state", "zip",
+                "Netflix", "Hulu", "Amazon Prime", "Disney+", "Max",
+                "Paramount+", "Apple TV+", "Peacock"]
+
+    label_enc_cols = ["gender", "city", "state", "zip"]
+    for col in label_enc_cols:
+        encoder = LabelEncoder()
+        combined = pd.concat([users[col].astype(str), current_user[col].astype(str)])
+        encoder.fit(combined)
+        users[col] = encoder.transform(users[col].astype(str))
+        current_user.loc[:, col] = encoder.transform(current_user[col].astype(str))
+
+    for col in features:
+        users[col] = pd.to_numeric(users[col], errors="coerce").fillna(0)
+        current_user.loc[:, col] = pd.to_numeric(current_user[col], errors="coerce").fillna(0)
+
+    user_vectors = users[features].to_numpy()
+    current_vector = current_user[features].to_numpy()
+    user_vectors_normalized = normalize(user_vectors)
+    current_vector_normalized = normalize(current_vector).reshape(1, -1)
+
+    similarity = np.dot(user_vectors_normalized, current_vector_normalized.T).flatten()
+    users["similarity"] = similarity
+
+    similar_users = users.sort_values(by="similarity", ascending=False).head(10)
+    relevant_ratings = ratings[ratings["user_id"].isin(similar_users["user_id"])]
+    avg_ratings = relevant_ratings.groupby("show_id")["rating"].mean().reset_index()
+    avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
+
+    genre_movies = pd.merge(genre_movies, avg_ratings, on="show_id", how="left")
+    genre_movies["avg_rating"] = genre_movies["avg_rating"].fillna(0)
+
+    top_recs = genre_movies.sort_values(by="avg_rating", ascending=False).head(10)
+    return build_response(top_recs)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=["recommend", "recommend_by_movie", "cold_start"])
     parser.add_argument("--user_id", type=int)
     parser.add_argument("--show_id", type=str)
+    parser.add_argument("--genre", type=str)
     args = parser.parse_args()
 
     if args.mode == "recommend" and args.user_id is not None:
@@ -200,6 +295,9 @@ if __name__ == "__main__":
         print(json.dumps(recommend_by_movie(args.show_id)))
     elif args.mode == "cold_start" and args.user_id is not None:
         print(json.dumps(cold_start(args.user_id)))
+    elif args.mode == "genre_recommend" and args.user_id is not None and args.genre:
+        print(json.dumps(genre_recommend(args.user_id, args.genre)))
+
     else:
         print(json.dumps([]))
 

@@ -5,43 +5,90 @@ import AddMovieModal from '../components/admin/AddMovie';
 import Pagination from '../components/Pagination';
 import { AdminMovie } from '../types/AdminMovie';
 import { Button } from 'react-bootstrap';
-import "../styles/AdminPage.css";
+import '../styles/AdminPage.css';
 
 import {
   fetchAdminMovies,
   addMovie,
   updateMovie,
   deleteMovie,
-  POSTER_BASE_URL
+  POSTER_BASE_URL,
 } from '../api/movieService';
 
 const PAGE_SIZE = 48;
 
 const AdminMoviesPage: React.FC = () => {
-  const [movies, setMovies] = useState<AdminMovie[]>([]);
+  const [allMovies, setAllMovies] = useState<AdminMovie[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<AdminMovie[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<AdminMovie | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState(localStorage.getItem('adminSearchQuery') || '');
 
   useEffect(() => {
     const loadMovies = async () => {
       try {
-        const data = await fetchAdminMovies(currentPage, PAGE_SIZE); // If paginated
-        const enriched = data.movies.map((movie) => ({
-          ...movie,
-          posterUrl: movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`,
-        }));
+        let allResults: AdminMovie[] = [];
+        let page = 1;
+        let hasMore = true;
 
-        const sorted = enriched.sort((a, b) => a.title.localeCompare(b.title));
-        setMovies(sorted);
-        setTotalPages(Math.ceil(data.totalCount / PAGE_SIZE));
+        while (hasMore) {
+          const data = await fetchAdminMovies(page, PAGE_SIZE);
+          if (!data.movies || data.movies.length === 0) {
+            hasMore = false;
+            break;
+          }
+
+          const enriched = data.movies.map((movie) => ({
+            ...movie,
+            posterUrl: `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
+          }));
+
+          allResults = [...allResults, ...enriched];
+
+          if (data.movies.length < PAGE_SIZE) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        }
+
+        const sorted = allResults.sort((a, b) => a.title.localeCompare(b.title));
+        setAllMovies(sorted);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
       }
     };
+
     loadMovies();
-  }, [currentPage]);
+  }, []);
+
+  // Sync search query from localStorage (e.g. when typed in Header)
+  useEffect(() => {
+    const syncSearch = () => {
+      const query = localStorage.getItem('adminSearchQuery') || '';
+      setSearchQuery(query);
+    };
+
+    window.addEventListener('storage', syncSearch);
+    return () => window.removeEventListener('storage', syncSearch);
+  }, []);
+
+  useEffect(() => {
+    const query = searchQuery.toLowerCase();
+    const results = allMovies.filter((movie) =>
+      movie.title.toLowerCase().includes(query)
+    );
+    setFilteredMovies(results);
+    setCurrentPage(1);
+  }, [searchQuery, allMovies]);
+
+  const paginatedMovies = filteredMovies.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredMovies.length / PAGE_SIZE));
 
   const handleOpenModal = (movie: AdminMovie) => setSelectedMovie(movie);
   const handleCloseModal = () => setSelectedMovie(null);
@@ -49,7 +96,9 @@ const AdminMoviesPage: React.FC = () => {
   const handleUpdate = async (updated: AdminMovie) => {
     try {
       await updateMovie(updated.show_id, updated);
-      setMovies((prev) => prev.map((m) => (m.show_id === updated.show_id ? updated : m)));
+      setAllMovies((prev) =>
+        prev.map((m) => (m.show_id === updated.show_id ? updated : m))
+      );
       handleCloseModal();
     } catch (error) {
       console.error('Update failed:', error);
@@ -59,7 +108,7 @@ const AdminMoviesPage: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       await deleteMovie(id);
-      setMovies((prev) => prev.filter((m) => m.show_id !== id));
+      setAllMovies((prev) => prev.filter((m) => m.show_id !== id));
       handleCloseModal();
     } catch (error) {
       console.error('Delete failed:', error);
@@ -69,7 +118,7 @@ const AdminMoviesPage: React.FC = () => {
   const handleAdd = async (newMovie: AdminMovie) => {
     try {
       await addMovie(newMovie);
-      setMovies((prev) => [...prev, newMovie]);
+      setAllMovies((prev) => [...prev, newMovie]);
       setShowAddModal(false);
     } catch (error) {
       console.error('Add failed:', error);
@@ -86,7 +135,7 @@ const AdminMoviesPage: React.FC = () => {
       </div>
 
       <div className="admin-movie-grid">
-        {movies.map((movie) => (
+        {paginatedMovies.map((movie) => (
           <AdminMovieCard
             key={movie.show_id}
             movie={movie}

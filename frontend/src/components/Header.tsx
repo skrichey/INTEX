@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Dropdown, FormControl } from 'react-bootstrap';
 import '../styles/Header.css';
@@ -6,15 +6,31 @@ import '../styles/Header.css';
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAuthenticated =
-    location.pathname.startsWith('/movies') || location.pathname.startsWith('/admin');
+  const isAuthenticated = location.pathname.startsWith('/movies') || location.pathname.startsWith('/admin');
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Load stored search when pathname changes (e.g., user navigates between pages)
+  useEffect(() => {
+    const stored = localStorage.getItem('adminSearchQuery') || '';
+    setSearchQuery(stored);
+  }, [location.pathname]);
+
+  // Keep sync if adminSearchQuery changes outside the component (e.g. other tab)
+  useEffect(() => {
+    const syncSearch = () => {
+      const stored = localStorage.getItem('adminSearchQuery') || '';
+      setSearchQuery(stored);
+    };
+    window.addEventListener('storage', syncSearch);
+    return () => window.removeEventListener('storage', syncSearch);
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setShowDropdown(e.target.value.trim().length > 0);
+    const query = e.target.value;
+    setSearchQuery(query);
+    localStorage.setItem('adminSearchQuery', query);
+    window.dispatchEvent(new Event('storage')); // Let pages react
   };
 
   const handleLogout = () => {
@@ -28,7 +44,7 @@ const Header: React.FC = () => {
         CineNiche
       </Link>
 
-      {isAuthenticated ? (
+      {isAuthenticated && (
         <div className="header-right">
           <div className="search-container">
             <FormControl
@@ -38,11 +54,6 @@ const Header: React.FC = () => {
               value={searchQuery}
               onChange={handleSearchChange}
             />
-            {showDropdown && (
-              <div className="bg-dark border border-secondary rounded mt-1 position-absolute w-100 z-3">
-                <p className="m-0 p-2 text-muted">Search results coming soon...</p>
-              </div>
-            )}
           </div>
 
           <Dropdown align="end">
@@ -55,12 +66,6 @@ const Header: React.FC = () => {
               <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
-        </div>
-      ) : (
-        <div className="header-right">
-          <Link to="/login" className="btn btn-danger login-button">
-            Login
-          </Link>
         </div>
       )}
     </header>
