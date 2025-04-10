@@ -111,13 +111,24 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
+
 // Content Security Policy (CSP)
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("Content-Security-Policy",
-        "default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com;");
+    context.Response.Headers["Content-Security-Policy"] =
+        @"default-src 'self'; 
+        style-src 'self' 'unsafe-inline'; 
+        font-src 'self'; 
+        img-src 'self'; 
+        script-src 'self'; 
+        connect-src 'self';";
+
     await next();
 });
+
+
+
 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
