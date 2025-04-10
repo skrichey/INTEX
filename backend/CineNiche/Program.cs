@@ -41,9 +41,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.Name = "AspNetCore.Identity.Application";
 });
 
-// Add Controllers
-builder.Services.AddControllers();
-
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
@@ -60,88 +57,43 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// HSTS Config (for non-dev)
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
-// Middleware
+// Development-only middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-// Automatically create Identity tables and roles
-using (var scope = app.Services.CreateScope())
+else
 {
-    var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-
-    context.Database.EnsureCreated();
-
-    // Seed roles
-    string[] roles = { "Admin", "User" };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
-    }
-
-    // Optional: Seed admin user
-    var adminEmail = "admin@cineniche.com";
-    var adminPassword = "AdminPassword123!";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
-    {
-        var newAdmin = new IdentityUser { UserName = adminEmail, Email = adminEmail };
-        var result = await userManager.CreateAsync(newAdmin, adminPassword);
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(newAdmin, "Admin");
-            Console.WriteLine("✅ Admin user created.");
-        }
-        else
-        {
-            Console.WriteLine("❌ Failed to create admin user:");
-            foreach (var error in result.Errors)
-                Console.WriteLine($"- {error.Description}");
-        }
-    }
+    app.UseHttpsRedirection();
+    app.UseHsts();
 }
 
-// Extra secruity feature Is 414
-// HTTPS and HSTS
-app.UseHttpsRedirection();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts(hsts =>
-    {
-        hsts.MaxAge = TimeSpan.FromDays(365); // 1 year
-        hsts.IncludeSubDomains = true; // Include subdomains in HSTS policy
-    });
-}
-
-
-
-// Content Security Policy (CSP)
+// CSP Header
 app.Use(async (context, next) =>
 {
     context.Response.Headers["Content-Security-Policy"] =
-        @"default-src 'self'; 
-        style-src 'self' 'unsafe-inline'; 
-        font-src 'self'; 
-        img-src 'self'; 
-        script-src 'self'; 
-        connect-src 'self';";
-
+        @"default-src 'self';
+          style-src 'self' 'unsafe-inline';
+          font-src 'self';
+          img-src 'self';
+          script-src 'self';
+          connect-src 'self';";
     await next();
 });
-
-
-
 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
@@ -163,5 +115,45 @@ app.MapGet("/pingauth", (HttpContext context) =>
 });
 
 app.MapControllers();
+
+// Seed roles + admin user
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<MovieDbContext>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+    context.Database.EnsureCreated();
+
+    string[] roles = { "Admin", "User" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+
+    var adminEmail = "admin@cineniche.com";
+    var adminPassword = "AdminPassword123!";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        var newAdmin = new IdentityUser { UserName = adminEmail, Email = adminEmail };
+        var result = await userManager.CreateAsync(newAdmin, adminPassword);
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(newAdmin, "Admin");
+            Console.WriteLine("✅ Admin user created.");
+        }
+        else
+        {
+            Console.WriteLine("❌ Failed to create admin user:");
+            foreach (var error in result.Errors)
+                Console.WriteLine($"- {error.Description}");
+        }
+    }
+}
 
 app.Run();
