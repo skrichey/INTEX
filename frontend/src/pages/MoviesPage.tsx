@@ -14,7 +14,7 @@ const MOVIES_PER_ROW = 10;
 
 const MoviesPage: React.FC = () => {
   const [recommended, setRecommended] = useState<MovieCardProps[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<MovieCardProps | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<string | null>(null);
   const [continueWatching, setContinueWatching] = useState<MovieCardProps[]>([]);
   const [genreMap, setGenreMap] = useState<Record<string, MovieCardProps[]>>({});
 

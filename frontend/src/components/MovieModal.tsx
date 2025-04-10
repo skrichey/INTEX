@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MovieCardProps } from '../types/Movie';
 import { FaPlay } from 'react-icons/fa';
 import '../styles/MovieModal.css';
-import { POSTER_BASE_URL } from '../api/movieService';
+import { POSTER_BASE_URL, fetchMovieById } from '../api/movieService';
 import FallbackImage from './FallbackImage';
 
 interface Props {
@@ -11,11 +11,25 @@ interface Props {
   onPlay: (movie: MovieCardProps) => void;
 }
 
-const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
-  const poster = movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`;
+const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) => {
+  const [movie, setMovie] = useState<MovieCardProps>(initialMovie);
   const [userRating, setUserRating] = useState<number | null>(null);
 
   const isNumericRating = typeof movie.rating === 'number' && !isNaN(movie.rating);
+  const poster = movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`;
+
+  // Prevent background scroll
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
+  // Update modal content if the passed movie changes
+  useEffect(() => {
+    setMovie(initialMovie);
+  }, [initialMovie]);
 
   const handleUserRating = (rating: number) => {
     const existing = movie.userRatings || [];
@@ -24,11 +38,20 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
     const newAverage =
       updatedRatings.reduce((sum, r) => sum + r, 0) / updatedRatings.length;
 
-    movie.userRatings = updatedRatings;
-    movie.rating = newAverage;
-
+    const updatedMovie = { ...movie, userRatings: updatedRatings, rating: newAverage };
     localStorage.setItem(`rating-${movie.show_id}`, JSON.stringify(updatedRatings));
+    setMovie(updatedMovie);
     setUserRating(rating);
+  };
+
+  const handleRecommendedClick = async (id: string) => {
+    try {
+      const data = await fetchMovieById(id);
+      setMovie(data);
+      setUserRating(null); // reset user rating
+    } catch (err) {
+      console.error('Failed to load recommended movie:', err);
+    }
   };
 
   return (
@@ -36,6 +59,7 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
       <div className="modal-container wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
         <div className="modal-content-horizontal">
+          {/* Left: Poster */}
           <FallbackImage
             src={poster}
             alt={movie.title}
@@ -43,6 +67,7 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
             title={movie.title}
           />
 
+          {/* Right: Info + scrollable content */}
           <div className="modal-info-right">
             <h2 className="modal-title">{movie.title}</h2>
 
@@ -60,7 +85,7 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
               </span>
             </div>
 
-            {movie.genres && movie.genres.length > 0 && (
+            {movie.genres?.length > 0 && (
               <div className="modal-genres mb-3">
                 {movie.genres.map((genre) => (
                   <span key={genre} className="genre-badge">{genre}</span>
@@ -91,6 +116,23 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
                   >
                     {num}
                   </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recommended movies */}
+            <div className="recommended-section mt-5">
+              <h4 className="mb-3">Watch Next</h4>
+              <div className="recommended-row">
+                {(movie.recommended || []).slice(0, 5).map((rec) => (
+                  <img
+                    key={rec.show_id}
+                    src={rec.posterUrl || `${POSTER_BASE_URL}${rec.show_id}.jpg`}
+                    alt={rec.title}
+                    title={rec.title}
+                    className="recommended-thumbnail"
+                    onClick={() => handleRecommendedClick(rec.show_id)}
+                  />
                 ))}
               </div>
             </div>

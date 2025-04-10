@@ -11,5 +11,6 @@ export type MovieCardProps = {
     rating?: number; // average user rating
     posterUrl?: string;
     onClick?: () => void;
+    recommended?: MovieCardProps[]; // Recommended movies
   };
   

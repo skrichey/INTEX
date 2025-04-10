@@ -37,20 +37,31 @@
 
 .modal-content-horizontal {
   display: flex;
-  flex-direction: row;
+  height: 80vh; /* required */
+  overflow: hidden;
 }
+
+.modal-info-right {
+  padding: 24px;
+  flex-grow: 1;
+  height: 100%;          /* required for scrollable child */
+  overflow-y: auto;      /* allows vertical scrolling */
+  scroll-behavior: smooth;
+}
+
+
 
 .modal-poster-left {
   width: 40%;
   height: 100%;
   object-fit: cover;
   border-right: 1px solid #333;
+  flex-shrink: 0;
 }
 
-.modal-info-right {
-  padding: 24px;
-  flex-grow: 1;
-}
+
+
+
 
 .modal-title {
   font-size: 28px;
