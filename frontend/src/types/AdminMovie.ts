@@ -1,7 +1,7 @@
 export interface AdminMovie {
   show_id: string;
   title: string;
-  type: string;
+  type?: string;
   director?: string;
   cast?: string;
   releaseYear?: number;

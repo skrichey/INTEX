@@ -47,7 +47,11 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
   const handleRecommendedClick = async (id: string) => {
     try {
       const data = await fetchMovieById(id);
-      setMovie(data);
+      if (data) {
+        setMovie(data);
+      } else {
+        console.error('Movie data is null');
+      }
       setUserRating(null); // reset user rating
     } catch (err) {
       console.error('Failed to load recommended movie:', err);
@@ -81,14 +85,14 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
               )}
               <span className="mx-2">•</span>
               <span>
-                {isNumericRating ? movie.rating.toFixed(1) : 'Not Rated'} / 5
+                {isNumericRating ? (movie.rating ?? 0).toFixed(1) : 'Not Rated'} / 5
 
               </span>
             </div>
 
-            {movie.genres?.length > 0 && (
+            {(movie.genres ?? []).length > 0 && (
               <div className="modal-genres mb-3">
-                {movie.genres.map((genre) => (
+                {(movie.genres ?? []).map((genre) => (
                   <span key={genre} className="genre-badge">{genre}</span>
                 ))}
               </div>

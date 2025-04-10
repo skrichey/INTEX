@@ -31,37 +31,43 @@ const AdminMoviesPage: React.FC = () => {
         let allResults: AdminMovie[] = [];
         let page = 1;
         let hasMore = true;
-
+  
         while (hasMore) {
           const data = await fetchAdminMovies(page, PAGE_SIZE);
           if (!data.movies || data.movies.length === 0) {
             hasMore = false;
             break;
           }
-
-          const enriched = data.movies.map((movie) => ({
-            ...movie,
-            posterUrl: `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
-          }));
-
+  
+          const enriched: AdminMovie[] = data.movies
+            .filter(
+              (movie): movie is AdminMovie =>
+                typeof movie.show_id === 'string' && typeof movie.title === 'string'
+            )
+            .map((movie) => ({
+              ...movie,
+              posterUrl: `${POSTER_BASE_URL}${movie.show_id}.jpg?v=${movie.show_id}`,
+              type: movie.type || 'Unknown',
+            }));
+  
           allResults = [...allResults, ...enriched];
-
+  
           if (data.movies.length < PAGE_SIZE) {
             hasMore = false;
           } else {
             page++;
           }
         }
-
+  
         const sorted = allResults.sort((a, b) => a.title.localeCompare(b.title));
         setAllMovies(sorted);
       } catch (error) {
         console.error('Failed to fetch movies:', error);
       }
     };
-
+  
     loadMovies();
-  }, []);
+  }, []);  
 
   // Sync search query from localStorage (e.g. when typed in Header)
   useEffect(() => {

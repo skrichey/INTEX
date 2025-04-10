@@ -1,16 +1,18 @@
-export type MovieCardProps = {
-    type: string;
+export interface MovieCardProps {
+  show_id: string;
+  title: string;
+  description?: string;
+  releaseYear?: number;
+  duration?: string;
+  genres?: string[];
+  director?: string;
+  cast?: string;
+  rating?: number;
+  posterUrl?: string;
+  recommended?: Array<{
     show_id: string;
     title: string;
-    director?: string;
-    cast?: string;
-    releaseYear?: number;
-    duration?: string;
-    description?: string;
-    genres?: string[];
-    rating?: number; // average user rating
     posterUrl?: string;
-    onClick?: () => void;
-    recommended?: MovieCardProps[]; // Recommended movies
-  };
-  
+  }>;
+  userRatings?: number[]; // Added userRatings property
+}
