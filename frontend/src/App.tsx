@@ -9,7 +9,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { AuthProvider } from './context/AuthContext';
 import AdminMoviesPage from './pages/AdminMoviesPage';
-import CreateAccountPage from './pages/CreateAccountPage';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function App() {
@@ -28,7 +27,6 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/admin" element={<AdminMoviesPage />} />
-            <Route path="/register" element={<CreateAccountPage />} />
           </Routes>
         </main>
         {!isLanding && <Footer />}
