@@ -239,7 +239,7 @@ def genre_recommend(user_id, genre):
         if not top_indices:
             return []
 
-        user_profile_vector = tfidf_matrix[top_indices].mean(axis=0)
+        user_profile_vector = np.asarray(tfidf_matrix[top_indices].mean(axis=0)).reshape(1, -1)
         genre_tfidf = tfidf.transform(genre_movies["combined"])
         content_scores = cosine_similarity(user_profile_vector, genre_tfidf).flatten()
         genre_movies["content_score"] = content_scores
