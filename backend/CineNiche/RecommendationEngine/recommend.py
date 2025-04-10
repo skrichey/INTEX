@@ -5,9 +5,6 @@ import argparse
 import sys
 from pathlib import Path
 from sqlalchemy import create_engine
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder, normalize
 
 GENRE_COLUMNS = [
     "Action", "Adventure", "Anime Series International TV Shows",
@@ -47,6 +44,9 @@ def build_response(df):
     ]
 
 def recommend_by_movie(show_id):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
     available_genre_columns = [col for col in GENRE_COLUMNS if col in titles.columns]
 
@@ -70,14 +70,16 @@ def recommend_by_movie(show_id):
     sim_scores = cosine_similarity(tfidf_matrix[idx_list[0]], tfidf_matrix).flatten()
     titles["similarity"] = sim_scores
 
-    # 🛠️ Exclude the input movie itself from recommendations
     filtered = titles[titles["show_id"] != show_id]
     top_recs = filtered.sort_values(by="similarity", ascending=False).head(10)
 
     return build_response(top_recs)
 
-
 def hybrid_recommend(user_id):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.preprocessing import MinMaxScaler
+
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
     ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
 
@@ -122,7 +124,7 @@ def hybrid_recommend(user_id):
         if not rated_items.empty:
             denom = similar_items[rated_items["show_id"]].sum()
             if denom == 0:
-                continue  # Avoid divide-by-zero
+                continue
             score = np.dot(
                 rated_items["rating"],
                 similar_items[rated_items["show_id"]]
@@ -145,6 +147,8 @@ def hybrid_recommend(user_id):
     return build_response(top_recs)
 
 def cold_start(user_id):
+    from sklearn.preprocessing import LabelEncoder, normalize
+
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
     ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
     users = pd.read_sql("SELECT * FROM movies_users", engine)
@@ -186,9 +190,11 @@ def cold_start(user_id):
     top_recs = top_shows.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
 
-# -- all previous imports and functions unchanged --
-
 def genre_recommend(user_id, genre):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.preprocessing import MinMaxScaler, LabelEncoder, normalize
+
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
     ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
     users = pd.read_sql("SELECT * FROM movies_users", engine)
@@ -197,12 +203,10 @@ def genre_recommend(user_id, genre):
     if genre not in available_genre_columns:
         return []
 
-    # Filter to genre-specific movies
     genre_movies = titles[titles[genre] == 1].copy()
     if genre_movies.empty:
         return []
 
-    # ✅ FIX: Add "combined" column to genre_movies
     genre_movies["combined"] = (
         genre_movies["title"].fillna("") + " " +
         genre_movies["director"].fillna("") + " " +
@@ -216,7 +220,6 @@ def genre_recommend(user_id, genre):
 
     user_ratings = ratings[ratings["user_id"] == user_id]
 
-    # If user has rated movies, build a content-based user profile
     if not user_ratings.empty:
         titles["combined"] = (
             titles["title"].fillna("") + " " +
@@ -231,7 +234,6 @@ def genre_recommend(user_id, genre):
 
         tfidf = TfidfVectorizer(stop_words="english")
         tfidf_matrix = tfidf.fit_transform(titles["combined"])
-
         top_user_ratings = user_ratings.sort_values(by="rating", ascending=False).head(3)
         top_indices = titles[titles["show_id"].isin(top_user_ratings["show_id"])].index.tolist()
         if not top_indices:
@@ -240,7 +242,6 @@ def genre_recommend(user_id, genre):
         user_profile_vector = tfidf_matrix[top_indices].mean(axis=0)
         genre_tfidf = tfidf.transform(genre_movies["combined"])
         content_scores = cosine_similarity(user_profile_vector, genre_tfidf).flatten()
-
         genre_movies["content_score"] = content_scores
 
         avg_ratings = ratings.groupby("show_id")["rating"].mean().reset_index()
@@ -254,7 +255,7 @@ def genre_recommend(user_id, genre):
         top_recs = genre_movies.sort_values(by="hybrid_score", ascending=False).head(10)
         return build_response(top_recs)
 
-    # Cold-start: no ratings yet
+    # Cold start
     current_user = users[users["user_id"] == user_id].copy()
     if current_user.empty:
         return []
@@ -262,7 +263,6 @@ def genre_recommend(user_id, genre):
     features = ["age", "gender", "city", "state", "zip",
                 "Netflix", "Hulu", "Amazon Prime", "Disney+", "Max",
                 "Paramount+", "Apple TV+", "Peacock"]
-
     label_enc_cols = ["gender", "city", "state", "zip"]
     for col in label_enc_cols:
         encoder = LabelEncoder()
@@ -285,7 +285,6 @@ def genre_recommend(user_id, genre):
 
     similar_users = users.sort_values(by="similarity", ascending=False).head(10)
     relevant_ratings = ratings[ratings["user_id"].isin(similar_users["user_id"])]
-
     avg_ratings = relevant_ratings.groupby("show_id")["rating"].mean().reset_index()
     avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
 
@@ -295,12 +294,10 @@ def genre_recommend(user_id, genre):
     top_recs = genre_movies.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=[
-    "recommend", "recommend_by_movie", "cold_start", "genre_recommend"
+        "recommend", "recommend_by_movie", "cold_start", "genre_recommend"
     ])
     parser.add_argument("--user_id", type=int)
     parser.add_argument("--show_id", type=str)
@@ -315,9 +312,9 @@ if __name__ == "__main__":
         print(json.dumps(cold_start(args.user_id)))
     elif args.mode == "genre_recommend" and args.user_id is not None and args.genre:
         print(json.dumps(genre_recommend(args.user_id, args.genre)))
-
     else:
         print(json.dumps([]))
+
 
 
 
