@@ -48,13 +48,21 @@ namespace CineNiche.Controllers
 
                 if (!result.Succeeded)
                 {
-                    var errorMessages = result.Errors.Select(e => e.Description);
+                    var errorMessages = result.Errors.Select(e => e.Description).ToList();
+
+                    Console.WriteLine("[Register ERROR] Identity creation failed.");
+                    foreach (var error in errorMessages)
+                    {
+                        Console.WriteLine($" - {error}");
+                    }
+
                     return BadRequest(new
                     {
                         message = "User creation failed.",
                         errors = errorMessages
                     });
                 }
+
 
                 if (!await _roleManager.RoleExistsAsync("User"))
                     await _roleManager.CreateAsync(new IdentityRole("User"));
@@ -93,6 +101,8 @@ public async Task<IActionResult> Login([FromBody] LoginRequest request)
     }
 
     var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
+    Console.WriteLine($"PasswordSignIn Result: Succeeded={result.Succeeded}, IsLockedOut={result.IsLockedOut}, IsNotAllowed={result.IsNotAllowed}, RequiresTwoFactor={result.RequiresTwoFactor}");
+
 
     if (!result.Succeeded)
     {
