@@ -283,7 +283,9 @@ def genre_recommend(user_id, genre):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", required=True, choices=["recommend", "recommend_by_movie", "cold_start"])
+    parser.add_argument("--mode", required=True, choices=[
+    "recommend", "recommend_by_movie", "cold_start", "genre_recommend"
+    ])
     parser.add_argument("--user_id", type=int)
     parser.add_argument("--show_id", type=str)
     parser.add_argument("--genre", type=str)
