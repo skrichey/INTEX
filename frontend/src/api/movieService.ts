@@ -7,7 +7,7 @@ export const POSTER_BASE_URL = "https://cinenicheposters.blob.core.windows.net/p
 // Fetch all public movies (if used on landing page etc.)
 export const fetchMovies = async (): Promise<MovieCardProps[]> => {
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(`${API_URL}/Movies`);  // Correct API call
     if (!response.ok) throw new Error('Failed to fetch movies');
     return await response.json();
   } catch (error) {
@@ -18,7 +18,7 @@ export const fetchMovies = async (): Promise<MovieCardProps[]> => {
 
 export const fetchMovieById = async (id: string): Promise<MovieCardProps | null> => {
   try {
-    const response = await fetch(`${API_URL}/${id}`);
+    const response = await fetch(`${API_URL}/Movies/${id}`);  // Correct API call
     if (!response.ok) throw new Error('Failed to fetch movie');
     return await response.json();
   } catch (error) {
@@ -28,26 +28,29 @@ export const fetchMovieById = async (id: string): Promise<MovieCardProps | null>
 };
 
 export const addMovie = async (movie: Omit<MovieCardProps, 'show_id'>): Promise<void> => {
-  const response = await fetch(API_URL, {
+  const response = await fetch(`${API_URL}/Movies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(movie),
+    credentials: 'include' // Ensures authentication cookie is sent with request
   });
   if (!response.ok) throw new Error('Failed to add movie');
 };
 
 export const updateMovie = async (id: string, movie: MovieCardProps): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL}/Movies/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(movie),
+    credentials: 'include' // Ensures authentication cookie is sent with request
   });
   if (!response.ok) throw new Error('Failed to update movie');
 };
 
 export const deleteMovie = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, {
+  const response = await fetch(`${API_URL}/Movies/${id}`, {
     method: 'DELETE',
+    credentials: 'include' // Ensures authentication cookie is sent with request
   });
   if (!response.ok) throw new Error('Failed to delete movie');
 };
@@ -63,7 +66,7 @@ export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardP
   }
 };
 
-// ✅ Updated: Fetch admin movies with pagination
+// Fetch all movies for admin (paginated)
 export const fetchAdminMovies = async (currentPage: number, pageSize: number): Promise<{
   page: number;
   pageSize: number;
@@ -72,7 +75,9 @@ export const fetchAdminMovies = async (currentPage: number, pageSize: number): P
   movies: MovieCardProps[];
 }> => {
   try {
-    const response = await fetch(`${API_URL}/Movies?page=${currentPage}&pageSize=${pageSize}`);
+    const response = await fetch(`${API_URL}/Movies?page=${currentPage}&pageSize=${pageSize}`, {
+      credentials: 'include' // Ensures auth cookies are sent with each request
+    });
     if (!response.ok) throw new Error('Failed to fetch admin movies');
     return await response.json();
   } catch (error) {

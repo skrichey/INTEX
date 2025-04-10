@@ -23,6 +23,13 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<MovieDbContext>()
 .AddDefaultTokenProviders();
 
+builder.Services.AddAuthentication()
+    .AddGoogle(googleOptions =>
+    {
+        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    });
+
 // Cookie Configuration
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -104,20 +111,37 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Extra secruity feature Is 414
 // HTTPS and HSTS
 app.UseHttpsRedirection();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseHsts();
+    app.UseHsts(hsts =>
+    {
+        hsts.MaxAge = TimeSpan.FromDays(365); // 1 year
+        hsts.IncludeSubDomains = true; // Include subdomains in HSTS policy
+    });
 }
+
+
 
 // Content Security Policy (CSP)
 app.Use(async (context, next) =>
 {
-    context.Response.Headers.Add("Content-Security-Policy",
-        "default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com;");
+    context.Response.Headers["Content-Security-Policy"] =
+        @"default-src 'self'; 
+        style-src 'self' 'unsafe-inline'; 
+        font-src 'self'; 
+        img-src 'self'; 
+        script-src 'self'; 
+        connect-src 'self';";
+
     await next();
 });
+
+
+
 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
