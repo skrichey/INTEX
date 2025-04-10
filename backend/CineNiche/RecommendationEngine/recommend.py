@@ -245,12 +245,13 @@ def genre_recommend(user_id, genre):
         genre_movies["content_score"] = content_scores
 
         avg_ratings = ratings.groupby("show_id")["rating"].mean().reset_index()
+        avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
         genre_movies = pd.merge(genre_movies, avg_ratings, on="show_id", how="left")
-        genre_movies["rating"] = genre_movies["rating"].fillna(0)
+        genre_movies["avg_rating"] = genre_movies["avg_rating"].fillna(0)
 
         scaler = MinMaxScaler()
-        genre_movies[["content_score", "rating"]] = scaler.fit_transform(genre_movies[["content_score", "rating"]])
-        genre_movies["hybrid_score"] = 0.6 * genre_movies["content_score"] + 0.4 * genre_movies["rating"]
+        genre_movies[["content_score", "avg_rating"]] = scaler.fit_transform(genre_movies[["content_score", "avg_rating"]])
+        genre_movies["hybrid_score"] = 0.6 * genre_movies["content_score"] + 0.4 * genre_movies["avg_rating"]
 
         top_recs = genre_movies.sort_values(by="hybrid_score", ascending=False).head(10)
         return build_response(top_recs)
@@ -293,6 +294,7 @@ def genre_recommend(user_id, genre):
 
     top_recs = genre_movies.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
