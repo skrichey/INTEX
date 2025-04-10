@@ -28,50 +28,74 @@ namespace CineNiche.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var userExists = await _userManager.FindByEmailAsync(request.Email);
-            if (userExists != null)
-                return BadRequest(new { message = "User already exists." });
-
-            var user = new IdentityUser
+            try
             {
-                UserName = request.Email,
-                Email = request.Email
-            };
+                var email = request.Email.ToLowerInvariant();
 
-            var result = await _userManager.CreateAsync(user, request.Password);
+                var userExists = await _userManager.FindByEmailAsync(email);
+                if (userExists != null)
+                    return BadRequest(new { message = "User already exists." });
 
-            if (!result.Succeeded)
-            {
-                return BadRequest(new
+                var user = new IdentityUser
                 {
-                    message = "User creation failed.",
-                    errors = result.Errors.Select(e => e.Description)
+                    UserName = email,
+                    Email = email,
+                    EmailConfirmed = true // ✅ allow login immediately
+                };
+
+                var result = await _userManager.CreateAsync(user, request.Password);
+
+                if (!result.Succeeded)
+                {
+                    var errorMessages = result.Errors.Select(e => e.Description);
+                    return BadRequest(new
+                    {
+                        message = "User creation failed.",
+                        errors = errorMessages
+                    });
+                }
+
+                if (!await _roleManager.RoleExistsAsync("User"))
+                    await _roleManager.CreateAsync(new IdentityRole("User"));
+
+                await _userManager.AddToRoleAsync(user, "User");
+
+                return Ok(new { message = "User registered successfully." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Register ERROR] {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+
+                return StatusCode(500, new
+                {
+                    message = "Unexpected error occurred during registration.",
+                    error = ex.Message,
+                    stack = ex.StackTrace
                 });
             }
-
-            // Ensure "User" role exists
-            if (!await _roleManager.RoleExistsAsync("User"))
-                await _roleManager.CreateAsync(new IdentityRole("User"));
-
-            await _userManager.AddToRoleAsync(user, "User");
-
-            return Ok(new { message = "User registered successfully." });
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            var email = request.Email.ToLowerInvariant();
+            var user = await _userManager.FindByEmailAsync(email);
+
             if (user == null)
                 return Unauthorized(new { message = "Invalid credentials." });
 
             var result = await _signInManager.PasswordSignInAsync(user, request.Password, true, false);
+
             if (!result.Succeeded)
+            {
+                Console.WriteLine($"[Login Failed] User: {email}, " +
+                    $"IsLockedOut: {result.IsLockedOut}, IsNotAllowed: {result.IsNotAllowed}");
                 return Unauthorized(new { message = "Invalid credentials." });
+            }
 
             var roles = await _userManager.GetRolesAsync(user);
-
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Email),
@@ -99,8 +123,6 @@ namespace CineNiche.Controllers
 
             return Ok(new { email = User.Identity.Name });
         }
-
-
     }
 
     public class LoginRequest

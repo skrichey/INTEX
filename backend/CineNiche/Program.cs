@@ -23,12 +23,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<MovieDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication()
-    .AddGoogle(googleOptions =>
-    {
-        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-     });
+//builder.Services.AddAuthentication()
+//    .AddGoogle(googleOptions =>
+//    {
+//        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+//        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+//    });
 
 // Cookie Configuration
 builder.Services.ConfigureApplicationCookie(options =>
