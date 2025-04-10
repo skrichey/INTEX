@@ -17,6 +17,19 @@ namespace CineNiche.Controllers
             _context = context;
         }
 
+        // GET: api/movies/all
+        [HttpGet("all")]
+        [AllowAnonymous]
+        public IActionResult GetAllMoviesUnpaginated()
+        {
+            var allMovies = _context.movies_titles
+                .OrderBy(m => m.title)
+                .Select(movie => MovieDto.ToDto(movie))
+                .ToList();
+
+            return Ok(allMovies);
+        }
+
         // GET: api/movies
         [HttpGet]
         [AllowAnonymous]

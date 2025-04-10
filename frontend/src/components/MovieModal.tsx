@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MovieCardProps } from '../types/Movie';
 import { FaPlay } from 'react-icons/fa';
 import '../styles/MovieModal.css';
@@ -13,6 +13,23 @@ interface Props {
 
 const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
   const poster = movie.posterUrl || `${POSTER_BASE_URL}${movie.show_id}.jpg`;
+  const [userRating, setUserRating] = useState<number | null>(null);
+
+  const isNumericRating = typeof movie.rating === 'number' && !isNaN(movie.rating);
+
+  const handleUserRating = (rating: number) => {
+    const existing = movie.userRatings || [];
+    const updatedRatings = [...existing, rating];
+
+    const newAverage =
+      updatedRatings.reduce((sum, r) => sum + r, 0) / updatedRatings.length;
+
+    movie.userRatings = updatedRatings;
+    movie.rating = newAverage;
+
+    localStorage.setItem(`rating-${movie.show_id}`, JSON.stringify(updatedRatings));
+    setUserRating(rating);
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -29,19 +46,19 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
           <div className="modal-info-right">
             <h2 className="modal-title">{movie.title}</h2>
 
-            {movie.rating && (
-              <div className="modal-meta mb-2">
-                {movie.releaseYear && <span>{movie.releaseYear}</span>}
-                {movie.releaseYear && movie.duration && <span className="mx-2">•</span>}
-                {movie.duration && <span>{movie.duration}</span>}
-                {movie.rating && (
-                  <>
-                    <span className="mx-2">•</span>
-                    <strong>{movie.rating.toFixed(1)}</strong> / 10
-                  </>
-                )}
-              </div>
-            )}
+            <div className="modal-meta mb-2">
+              {movie.releaseYear && <span>{movie.releaseYear}</span>}
+              {movie.duration && (
+                <>
+                  <span className="mx-2">•</span>
+                  <span>{movie.duration}</span>
+                </>
+              )}
+              <span className="mx-2">•</span>
+              <span>
+                ⭐ {isNumericRating ? movie.rating.toFixed(1) : 'Not Rated'} / 10
+              </span>
+            </div>
 
             {movie.genres && movie.genres.length > 0 && (
               <div className="modal-genres mb-3">
@@ -61,6 +78,22 @@ const MovieModal: React.FC<Props> = ({ movie, onClose, onPlay }) => {
             <button className="modal-play mt-3" onClick={() => onPlay(movie)}>
               <span className="me-2"><FaPlay /></span> Play
             </button>
+
+            {/* User Rating */}
+            <div className="user-rating mt-4">
+              <p><strong>Rate this movie:</strong></p>
+              <div className="rating-options">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => handleUserRating(num)}
+                    className={`rating-btn ${userRating === num ? 'selected' : ''}`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
