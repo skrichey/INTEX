@@ -13,7 +13,7 @@ const RegisterPage: React.FC = () => {
   const [gender, setGender] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [zip, setZip] = useState('');
+  const [zip, setZip] = useState<number | ''>(''); // Changed from string to number
   const [preferences, setPreferences] = useState<number[]>(Array(8).fill(0));
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -22,14 +22,8 @@ const RegisterPage: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const platformLabels = [
-    'Netflix',
-    'Amazon Prime',
-    'Disney+',
-    'Paramount+',
-    'Max',
-    'Hulu',
-    'Apple TV+',
-    'Peacock'
+    'Netflix', 'Amazon Prime', 'Disney+', 'Paramount+',
+    'Max', 'Hulu', 'Apple TV+', 'Peacock'
   ];
 
   const handlePreferenceToggle = (index: number) => {
@@ -40,7 +34,6 @@ const RegisterPage: React.FC = () => {
     });
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -137,7 +130,7 @@ const RegisterPage: React.FC = () => {
 
           <div className="mb-3">
             <label className="form-label">Zip Code</label>
-            <input type="text" className="form-control" required value={zip} onChange={(e) => setZip(e.target.value)} />
+            <input type="number" className="form-control" required value={zip} onChange={(e) => setZip(Number(e.target.value))} />
           </div>
 
           <div className="mb-3" ref={dropdownRef}>
