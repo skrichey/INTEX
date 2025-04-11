@@ -91,29 +91,37 @@ export const fetchAdminMovies = async (currentPage: number, pageSize: number): P
   }
 };
 
-// Function to fetch genre recommendations
+// Fetch genre recommendations
 export async function fetchGenreRecommendations(genre: string): Promise<MovieCardProps[]> {
-  // Hardcode userId as 1 temporarily
   const userId = 1;
-  
-  // Ensure the genre is properly encoded in the URL
   const encodedGenre = encodeURIComponent(genre);
-
-  // Construct the API URL
   const url = `${API_URL}/Recommendations/genre?userId=${userId}&genre=${encodedGenre}`;
-
-  // Log the URL for debugging
-  console.log("Fetching from API:", url);
-
-  // Fetch recommendations for the genre
   const response = await fetch(url);
 
-  // If the response is not OK, log the error and throw an exception
   if (!response.ok) {
     console.error(`Failed to fetch recommendations for genre ${genre}. Status: ${response.status}`);
     throw new Error(`Failed to fetch recommendations for genre ${genre}`);
   }
 
-  // Return the JSON data (movies for the genre)
   return response.json();
 }
+
+// Fetch recommendations based on a specific movie
+export const getRecommendationsByMovieId = async (showId: string): Promise<MovieCardProps[]> => {
+  try {
+    const response = await fetch(`${API_URL}/Recommendations/by-movie`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ show_id: showId }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch recommendations for show_id: ${showId}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching recommendations by movie:', error);
+    return [];
+  }
+};

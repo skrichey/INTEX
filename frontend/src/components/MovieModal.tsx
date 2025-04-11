@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MovieCardProps } from '../types/Movie';
 import { FaPlay } from 'react-icons/fa';
 import '../styles/MovieModal.css';
-import { POSTER_BASE_URL, fetchMovieById } from '../api/movieService';
+import { POSTER_BASE_URL, fetchMovieById, getRecommendationsByMovieId } from '../api/movieService';
 import FallbackImage from './FallbackImage';
 
 interface Props {
@@ -30,6 +30,23 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
     setMovie(initialMovie);
   }, [initialMovie]);
 
+  // 🔥 Fetch recommendations when the modal first opens
+  useEffect(() => {
+    const fetchRecs = async () => {
+      try {
+        const recommended = await getRecommendationsByMovieId(initialMovie.show_id);
+        setMovie((prev) => ({
+          ...prev,
+          recommended,
+        }));
+      } catch (err) {
+        console.error('Error loading initial recommendations:', err);
+      }
+    };
+
+    fetchRecs();
+  }, [initialMovie.show_id]);
+
   const handleUserRating = (rating: number) => {
     const existing = movie.userRatings || [];
     const updatedRatings = [...existing, rating];
@@ -49,12 +66,22 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
 
   const handleRecommendedClick = async (id: string) => {
     try {
-      const data = await fetchMovieById(id);
-      if (data) {
-        setMovie(data);
-      } else {
+      const [movieData, recommended] = await Promise.all([
+        fetchMovieById(id),
+        getRecommendationsByMovieId(id),
+      ]);
+
+      if (!movieData) {
         console.error('Movie data is null');
+        return;
       }
+
+      const updatedMovie: MovieCardProps = {
+        ...movieData,
+        recommended: recommended || [],
+      };
+
+      setMovie(updatedMovie);
       setUserRating(null);
     } catch (err) {
       console.error('Failed to load recommended movie:', err);
@@ -66,7 +93,6 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
       <div className="modal-container wide" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>×</button>
         <div className="modal-content-horizontal">
-          {/* Left: Poster */}
           <FallbackImage
             src={poster}
             alt={movie.title}
@@ -74,7 +100,6 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
             title={movie.title}
           />
 
-          {/* Right: Info + scrollable content */}
           <div className="modal-info-right">
             <h2 className="modal-title">{movie.title}</h2>
 
@@ -94,7 +119,6 @@ const MovieModal: React.FC<Props> = ({ movie: initialMovie, onClose, onPlay }) =
                     : movie.rating
                   : 'Not Rated'}
               </span>
-
             </div>
 
             {(movie.genres ?? []).length > 0 && (

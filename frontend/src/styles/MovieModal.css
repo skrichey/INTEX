@@ -151,3 +151,27 @@
   background-color: #e50914;
   border-color: #e50914;
 }
+
+.recommended-section {
+  margin-top: 1rem;
+}
+
+.recommended-row {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.recommended-thumbnail {
+  height: 120px;
+  width: auto;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.recommended-thumbnail:hover {
+  transform: scale(1.05);
+}
