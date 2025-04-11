@@ -29,7 +29,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SameSite = SameSiteMode.None; // 🔥 Required for cross-site requests
     options.Cookie.Name = "AspNetCore.Identity.Application";
     options.SlidingExpiration = true;
 
@@ -55,7 +55,7 @@ builder.Services.AddCors(options =>
             "https://proud-bush-0e160501e.6.azurestaticapps.net")
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .AllowCredentials());
+        .AllowCredentials()); // 🔥 Must allow credentials
 });
 
 builder.Services.AddControllers();
@@ -83,7 +83,7 @@ else
     app.UseHsts();
 }
 
-// 🚨 Order matters: CORS FIRST
+// 🚨 Order matters: CORS BEFORE auth
 app.UseCors("AllowFrontend");
 
 // CSP Header (optional, can comment out if causes issues)
@@ -98,7 +98,6 @@ app.UseCors("AllowFrontend");
 //        "connect-src 'self' https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net;");
 //    await next();
 //});
-
 
 app.UseAuthentication();
 app.UseAuthorization();
