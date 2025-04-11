@@ -1,4 +1,5 @@
-// src/context/AuthContext.tsx
+// src/context/AuthContext.tsx 
+// This file creates a context to manage authentication state in a React application.
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 type AuthContextType = {
