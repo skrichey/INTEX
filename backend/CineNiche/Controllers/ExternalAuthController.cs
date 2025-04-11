@@ -10,10 +10,10 @@ namespace CineNiche.Controllers
     [Route("external-login")]
     public class ExternalAuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
-        public ExternalAuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public ExternalAuthController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -45,7 +45,7 @@ namespace CineNiche.Controllers
 
             // If user doesn't exist, create them
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-            var user = new IdentityUser { UserName = email, Email = email };
+            var user = new ApplicationUser { UserName = email, Email = email };
 
             var result = await _userManager.CreateAsync(user);
             if (result.Succeeded)

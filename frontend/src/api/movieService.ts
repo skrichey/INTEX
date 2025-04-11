@@ -1,5 +1,6 @@
 // src/api/movieService.ts
 import { MovieCardProps } from '../types/Movie';
+import { getUserIdFromBackend } from '../api/authService'; // You'll create this helper
 
 export const API_URL = 'https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api';
 export const POSTER_BASE_URL = 'https://cinenicheposters.blob.core.windows.net/posters/';
@@ -93,8 +94,7 @@ export const fetchAdminMovies = async (currentPage: number, pageSize: number): P
 
 // Function to fetch genre recommendations
 export async function fetchGenreRecommendations(genre: string): Promise<MovieCardProps[]> {
-  // Hardcode userId as 1 temporarily
-  const userId = 1;
+  const userId = await getUserIdFromBackend();
   
   // Ensure the genre is properly encoded in the URL
   const encodedGenre = encodeURIComponent(genre);

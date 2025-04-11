@@ -82,13 +82,13 @@ def recommend_by_movie(show_id):
 
     return build_response(top_recs)
 
-def hybrid_recommend(user_id):
+def hybrid_recommend(id):
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
     from sklearn.preprocessing import MinMaxScaler
 
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
-    ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
+    ratings = pd.read_sql("SELECT * FROM AspNetMoviesRatings", engine)
 
     available_genre_columns = [col for col in GENRE_COLUMNS if col in titles.columns]
     titles["combined"] = (
@@ -104,7 +104,7 @@ def hybrid_recommend(user_id):
 
     tfidf = TfidfVectorizer(stop_words="english")
     tfidf_matrix = tfidf.fit_transform(titles["combined"])
-    user_ratings = ratings[ratings["user_id"] == user_id]
+    user_ratings = ratings[ratings["user_id"] == id]
 
     if user_ratings.empty:
         return titles.head(10).to_dict(orient="records")
@@ -153,14 +153,14 @@ def hybrid_recommend(user_id):
     top_recs = merged.sort_values(by="hybrid_score", ascending=False).head(10)
     return build_response(top_recs)
 
-def cold_start(user_id):
+def cold_start(id):
     from sklearn.preprocessing import LabelEncoder, normalize
 
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
-    ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
-    users = pd.read_sql("SELECT * FROM movies_users", engine)
+    ratings = pd.read_sql("SELECT * FROM AspNetMovieRatings", engine)
+    users = pd.read_sql("SELECT * FROM AspNetUsers", engine)
 
-    current_user = users[users["user_id"] == user_id].copy()
+    current_user = users[users["id"] == id].copy()
     if current_user.empty:
         return []
 
@@ -189,7 +189,7 @@ def cold_start(user_id):
     users["similarity"] = similarity
 
     similar_users = users.sort_values(by="similarity", ascending=False).head(10)
-    relevant_ratings = ratings[ratings["user_id"].isin(similar_users["user_id"])]
+    relevant_ratings = ratings[ratings["user_id"].isin(similar_users["id"])]
     avg_ratings = relevant_ratings.groupby("show_id")["rating"].mean().reset_index()
     avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
 
@@ -197,14 +197,14 @@ def cold_start(user_id):
     top_recs = top_shows.sort_values(by="avg_rating", ascending=False).head(10)
     return build_response(top_recs)
 
-def genre_recommend(user_id, genre):
+def genre_recommend(id, genre):
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
     from sklearn.preprocessing import MinMaxScaler, LabelEncoder, normalize
 
     titles = pd.read_sql("SELECT * FROM movies_titles", engine)
-    ratings = pd.read_sql("SELECT * FROM movies_ratings", engine)
-    users = pd.read_sql("SELECT * FROM movies_users", engine)
+    ratings = pd.read_sql("SELECT * FROM AspNetMovieRatings", engine)
+    users = pd.read_sql("SELECT * FROM AspNetUsers", engine)
 
     available_genre_columns = [col for col in GENRE_COLUMNS if col in titles.columns]
     if genre not in available_genre_columns:
@@ -225,7 +225,7 @@ def genre_recommend(user_id, genre):
         )
     )
 
-    user_ratings = ratings[ratings["user_id"] == user_id]
+    user_ratings = ratings[ratings["id"] == id]
 
     if not user_ratings.empty:
         titles["combined"] = (
@@ -264,7 +264,7 @@ def genre_recommend(user_id, genre):
         return build_response(top_recs)
 
     # Cold start
-    current_user = users[users["user_id"] == user_id].copy()
+    current_user = users[users["id"] == id].copy()
     if current_user.empty:
         return []
 
@@ -292,7 +292,7 @@ def genre_recommend(user_id, genre):
     users["similarity"] = similarity
 
     similar_users = users.sort_values(by="similarity", ascending=False).head(10)
-    relevant_ratings = ratings[ratings["user_id"].isin(similar_users["user_id"])]
+    relevant_ratings = ratings[ratings["user_id"].isin(similar_users["id"])]
     avg_ratings = relevant_ratings.groupby("show_id")["rating"].mean().reset_index()
     avg_ratings.rename(columns={"rating": "avg_rating"}, inplace=True)
 
@@ -308,19 +308,19 @@ if __name__ == "__main__":
     parser.add_argument("--mode", required=True, choices=[
         "recommend", "recommend_by_movie", "cold_start", "genre_recommend"
     ])
-    parser.add_argument("--user_id", type=int)
+    parser.add_argument("--id", type=str)
     parser.add_argument("--show_id", type=str)
     parser.add_argument("--genre", type=str)
     args = parser.parse_args()
 
-    if args.mode == "recommend" and args.user_id is not None:
-        print(json.dumps(hybrid_recommend(args.user_id)))
+    if args.mode == "recommend" and args.id is not None:
+        print(json.dumps(hybrid_recommend(args.id)))
     elif args.mode == "recommend_by_movie" and args.show_id:
         print(json.dumps(recommend_by_movie(args.show_id)))
-    elif args.mode == "cold_start" and args.user_id is not None:
-        print(json.dumps(cold_start(args.user_id)))
-    elif args.mode == "genre_recommend" and args.user_id is not None and args.genre:
-        print(json.dumps(genre_recommend(args.user_id, args.genre)))
+    elif args.mode == "cold_start" and args.id is not None:
+        print(json.dumps(cold_start(args.id)))
+    elif args.mode == "genre_recommend" and args.id is not None and args.genre:
+        print(json.dumps(genre_recommend(args.id, args.genre)))
     else:
         print(json.dumps([]))
 

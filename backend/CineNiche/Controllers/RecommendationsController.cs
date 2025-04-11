@@ -75,17 +75,17 @@ namespace CineNiche.Controllers
 
         // Hybrid or Cold-start
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetRecommendations(int userId)
+        public async Task<IActionResult> GetRecommendations(string userId)
         {
-            if (userId <= 0)
+            if (string.IsNullOrWhiteSpace(userId))
                 return BadRequest("Invalid user_id.");
 
-            bool hasRatings = await _context.movies_ratings.AnyAsync(r => r.user_id == userId);
+            bool hasRatings = await _context.AspNetMoviesRatings.AnyAsync(r => r.user_id.ToString() == userId);
             string mode = hasRatings ? "recommend" : "cold_start";
 
             try
             {
-                var output = RunPythonScript($"--mode {mode} --user_id {userId}");
+                var output = RunPythonScript($"--mode {mode} --id {userId}");
                 var recs = JsonConvert.DeserializeObject<List<RecommendationDto>>(output);
                 return Ok(recs);
             }
@@ -118,7 +118,7 @@ namespace CineNiche.Controllers
         [HttpGet("top-rated")]
         public async Task<IActionResult> GetTopRatedMovies()
         {
-            var topRatings = await _context.movies_ratings
+            var topRatings = await _context.AspNetMoviesRatings
                 .GroupBy(r => r.show_id)
                 .Select(g => new
                 {
@@ -176,7 +176,7 @@ namespace CineNiche.Controllers
 
             try
             {
-                var output = RunPythonScript($"--mode genre_recommend --user_id {userId} --genre \"{genre}\"");
+                var output = RunPythonScript($"--mode genre_recommend --id {userId} --genre \"{genre}\"");
                 var recs = JsonConvert.DeserializeObject<List<RecommendationDto>>(output);
                 return Ok(recs);
             }

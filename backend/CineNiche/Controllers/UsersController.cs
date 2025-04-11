@@ -19,39 +19,39 @@ namespace CineNiche.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            var users = await _context.movies_users.ToListAsync();
+            var users = await _context.AspNetUsers.ToListAsync();
             return Ok(users);
         }
 
         // POST: api/Users
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] User user)
+        public async Task<IActionResult> CreateUser([FromBody] ApplicationUser user)
         {
-            if (string.IsNullOrWhiteSpace(user.name))
+            if (string.IsNullOrWhiteSpace(user.Name))
                 return BadRequest("Name is required.");
 
-            if (await _context.movies_users.AnyAsync(u => u.user_id == user.user_id))
+            if (await _context.AspNetUsers.AnyAsync(u => u.Id == user.Id))
                 return Conflict("User with this ID already exists.");
 
-            _context.movies_users.Add(user);
+            _context.AspNetUsers.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User created successfully", user.user_id });
+            return Ok(new { message = "User created successfully", user.Id });
         }
 
         // DELETE: api/Users/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
-            var user = await _context.movies_users.FindAsync(id);
+            var user = await _context.AspNetUsers.FindAsync(id);
             if (user == null)
                 return NotFound("User not found.");
 
             // Optionally delete user ratings as well
-            var ratings = _context.movies_ratings.Where(r => r.user_id == id);
-            _context.movies_ratings.RemoveRange(ratings);
+            var ratings = _context.AspNetMoviesRatings.Where(r => r.user_id == user.Id);
+            _context.AspNetMoviesRatings.RemoveRange(ratings);
 
-            _context.movies_users.Remove(user);
+            _context.AspNetUsers.Remove(user);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "User deleted successfully" });
