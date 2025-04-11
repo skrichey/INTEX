@@ -1,0 +1,12 @@
+{
+    "routes": [
+      {
+        "route": "/api/*",
+        "rewrite": "https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api/*"
+      }
+    ],
+    "globalHeaders": {
+      "Access-Control-Allow-Credentials": "true"
+    }
+  }
+  

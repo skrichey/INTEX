@@ -2,7 +2,7 @@
 
 export const loginUser = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch('https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export const loginUser = async (email: string, password: string): Promise<boolea
   
   export const getUserIdFromBackend = async (): Promise<string | null> => {
     try {
-      const res = await fetch('https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api/auth/user', {
+      const res = await fetch('/api/auth/user', {
         credentials: 'include',
       });
   
