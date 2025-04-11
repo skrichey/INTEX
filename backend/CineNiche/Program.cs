@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+// 11111
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ✅ Use real DB (SQLite replaced with SQL Server or another real DB in production)
 builder.Services.AddDbContext<MovieDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))); // ✅ switch to real DB later
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))); // 
 
 // ✅ Configure ASP.NET Identity with better password rules
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
