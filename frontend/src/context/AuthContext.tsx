@@ -16,12 +16,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Optional: Load userId from localStorage (if you are using it)
   useEffect(() => {
-    const savedUserId = localStorage.getItem('userId');
-    if (savedUserId) {
-      setUserId(savedUserId);
-      setIsLoggedIn(true); // Assuming if there's a userId in localStorage, user is logged in
-    }
+    const fetchUserId = async () => {
+      try {
+        const res = await fetch('https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net/api/auth/user', {
+          credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Not logged in');
+        const id = await res.text();
+        setUserId(id);
+        setIsLoggedIn(true);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+  
+    fetchUserId();
   }, []);
+  
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, userId, setUserId }}>

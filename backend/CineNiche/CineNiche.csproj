@@ -25,18 +25,8 @@
 	</ItemGroup>
 
 	<!-- Ensures DB is copied for local runs -->
-	<ItemGroup>
-		<Content Include="RecommendationEngine\Movies.sqlite">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
 
 	<!-- Ensures DB is included in Azure publish -->
-	<ItemGroup>
-		<None Include="RecommendationEngine\Movies.sqlite">
-			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-		</None>
-	</ItemGroup>
 
 	<!-- ✅ NEW: Ensure Python script is published -->
 	<ItemGroup>
