@@ -54,7 +54,7 @@ const MoviesPage: React.FC = () => {
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        const movies = await fetchRecommendedMovies("Id"); // Replace with dynamic user ID if needed
+        const movies = await fetchRecommendedMovies(); // Fetch recommended movies
         setRecommended(movies);
       } catch (err) {
         console.error("Failed to fetch recommended movies:", err);

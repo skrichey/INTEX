@@ -126,34 +126,29 @@ namespace CineNiche.Controllers
                 return Unauthorized(new { message = "Invalid credentials." });
             }
 
-            var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
-            Console.WriteLine($"PasswordSignIn Result: Succeeded={result.Succeeded}, IsLockedOut={result.IsLockedOut}, IsNotAllowed={result.IsNotAllowed}, RequiresTwoFactor={result.RequiresTwoFactor}");
-
-
-            if (!result.Succeeded)
+            var isValidPassword = await _userManager.CheckPasswordAsync(user, request.Password);
+            if (!isValidPassword)
             {
-                Console.WriteLine($"[Login Failed] User: {user.Email}, Reason: " +
-                    $"{(result.IsLockedOut ? "Locked out" : "")} " +
-                    $"{(result.IsNotAllowed ? "Not allowed" : "")} " +
-                    $"{(!result.Succeeded ? "Invalid credentials" : "")}");
-
+                Console.WriteLine($"[Login Failed] Invalid password for user: {user.Email}");
                 return Unauthorized(new { message = "Invalid credentials." });
             }
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
     {
-        new Claim(ClaimTypes.NameIdentifier, user.Id), // 🔐 this makes /api/auth/user work
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
         new Claim(ClaimTypes.Name, user.Email),
         new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
     };
 
-
             var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
-            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
 
             return Ok(new { message = "Login successful!" });
         }
+
 
         [HttpOptions("login")]
         [AllowAnonymous]

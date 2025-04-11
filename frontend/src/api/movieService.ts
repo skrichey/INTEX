@@ -61,10 +61,23 @@ export const deleteMovie = async (id: string): Promise<void> => {
 };
 
 // Fetch recommended movies for a user
-export const fetchRecommendedMovies = async (userId: string): Promise<MovieCardProps[]> => {
+export const fetchRecommendedMovies = async (): Promise<MovieCardProps[]> => {
+  const userId = await getUserIdFromBackend();
+
+  if (!userId) {
+    console.error('❌ Cannot fetch recommendations: userId is null.');
+    return [];
+  }
+
   try {
-    const response = await fetch(`${API_URL}/Recommendations/${userId}`);
-    if (!response.ok) throw new Error('Failed to fetch recommendations');
+    const response = await fetch(`${API_URL}/Recommendations/${userId}`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch recommendations');
+    }
+
     return await response.json();
   } catch (error) {
     console.error('Error fetching recommended movies:', error);
@@ -95,25 +108,22 @@ export const fetchAdminMovies = async (currentPage: number, pageSize: number): P
 // Function to fetch genre recommendations
 export async function fetchGenreRecommendations(genre: string): Promise<MovieCardProps[]> {
   const userId = await getUserIdFromBackend();
-  
-  // Ensure the genre is properly encoded in the URL
-  const encodedGenre = encodeURIComponent(genre);
 
-  // Construct the API URL
+  if (!userId) {
+    console.error("❌ userId is null — user is not authenticated.");
+    return []; // or throw new Error("User not logged in")
+  }
+
+  const encodedGenre = encodeURIComponent(genre);
   const url = `${API_URL}/Recommendations/genre?userId=${userId}&genre=${encodedGenre}`;
 
-  // Log the URL for debugging
-  console.log("Fetching from API:", url);
+  console.log("✅ Fetching from API:", url);
 
-  // Fetch recommendations for the genre
   const response = await fetch(url);
-
-  // If the response is not OK, log the error and throw an exception
   if (!response.ok) {
     console.error(`Failed to fetch recommendations for genre ${genre}. Status: ${response.status}`);
     throw new Error(`Failed to fetch recommendations for genre ${genre}`);
   }
 
-  // Return the JSON data (movies for the genre)
   return response.json();
 }
