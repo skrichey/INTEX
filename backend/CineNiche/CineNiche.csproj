@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="RecommendationEngine\Movies.sqlite" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.5" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.15" />
@@ -30,6 +34,9 @@
 
 	<!-- ✅ NEW: Ensure Python script is published -->
 	<ItemGroup>
+		<Content Include="RecommendationEngine\Movies.sqlite">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="RecommendationEngine\recommend.py">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
