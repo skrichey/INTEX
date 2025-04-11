@@ -28,7 +28,6 @@ namespace CineNiche.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             try
@@ -39,7 +38,6 @@ namespace CineNiche.Controllers
                 if (userExists != null)
                     return BadRequest(new { message = "User already exists." });
 
-                // ✅ Guard clause
                 if (request.Preferences == null || request.Preferences.Count != 8)
                     return BadRequest(new { message = "Preferences array must have exactly 8 values (0 or 1)." });
 
@@ -69,19 +67,11 @@ namespace CineNiche.Controllers
                     Peacock = request.Preferences[7] == 1
                 };
 
-
                 var result = await _userManager.CreateAsync(user, request.Password);
 
                 if (!result.Succeeded)
                 {
                     var errorMessages = result.Errors.Select(e => e.Description).ToList();
-
-                    Console.WriteLine("[Register ERROR] Identity creation failed.");
-                    foreach (var error in errorMessages)
-                    {
-                        Console.WriteLine($" - {error}");
-                    }
-
                     return BadRequest(new
                     {
                         message = "User creation failed.",
@@ -98,9 +88,6 @@ namespace CineNiche.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Register ERROR] {ex.Message}");
-                Console.WriteLine(ex.StackTrace);
-
                 return StatusCode(500, new
                 {
                     message = "Unexpected error occurred during registration.",
@@ -109,7 +96,6 @@ namespace CineNiche.Controllers
                 });
             }
         }
-
 
         [HttpPost("login")]
         [AllowAnonymous]
@@ -121,25 +107,20 @@ namespace CineNiche.Controllers
                 .FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
 
             if (user == null)
-            {
-                Console.WriteLine($"[Login] User not found: {normalizedEmail}");
                 return Unauthorized(new { message = "Invalid credentials." });
-            }
 
             var isValidPassword = await _userManager.CheckPasswordAsync(user, request.Password);
             if (!isValidPassword)
-            {
-                Console.WriteLine($"[Login Failed] Invalid password for user: {user.Email}");
                 return Unauthorized(new { message = "Invalid credentials." });
-            }
 
             var roles = await _userManager.GetRolesAsync(user);
+
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Name, user.Email),
-        new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
-    };
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
+            };
 
             var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -149,16 +130,12 @@ namespace CineNiche.Controllers
             return Ok(new { message = "Login successful!" });
         }
 
-
         [HttpOptions("login")]
         [AllowAnonymous]
         public IActionResult OptionsLogin()
         {
             return Ok();
         }
-
-
-
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
@@ -176,8 +153,9 @@ namespace CineNiche.Controllers
             return Ok(new { email = User.Identity.Name });
         }
 
+        // 🔥 ABSOLUTE PATH FIX — Prevents route ambiguity
         [Authorize]
-        [HttpGet("user")]
+        [HttpGet("/api/auth/user")]
         public IActionResult GetCurrentUserId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -185,12 +163,22 @@ namespace CineNiche.Controllers
         }
     }
 
-
     public class LoginRequest
     {
         public string Email { get; set; }
         public string Password { get; set; }
     }
 
-    
+    public class RegisterRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public string Gender { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
+        public string Zip { get; set; }
+        public List<int> Preferences { get; set; } = new List<int>();
+    }
 }

@@ -122,7 +122,8 @@ export async function fetchGenreRecommendations(genre: string): Promise<MovieCar
   const response = await fetch(url);
   if (!response.ok) {
     console.error(`Failed to fetch recommendations for genre ${genre}. Status: ${response.status}`);
-    throw new Error(`Failed to fetch recommendations for genre ${genre}`);
+    return []; // Silently fail for this genre and continue others
+;
   }
 
   return response.json();

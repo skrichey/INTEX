@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,22 +24,26 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<MovieDbContext>()
 .AddDefaultTokenProviders();
 
-//builder.Services.AddAuthentication()
-//    .AddGoogle(googleOptions =>
-//    {
-//        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-//        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-//    });
-
-// Cookie Configuration
+// Cookie Auth Configuration
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.None;
-    options.LoginPath = "/login";
-    options.SlidingExpiration = true;
     options.Cookie.Name = "AspNetCore.Identity.Application";
+    options.SlidingExpiration = true;
+
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    };
+
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = 403;
+        return Task.CompletedTask;
+    };
 });
 
 // CORS Configuration
@@ -53,19 +58,15 @@ builder.Services.AddCors(options =>
         .AllowCredentials());
 });
 
-// Swagger Setup
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// HSTS Config (for non-dev)
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365);
     options.IncludeSubDomains = true;
     options.Preload = true;
 });
-
-builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -82,32 +83,36 @@ else
     app.UseHsts();
 }
 
-// ✅ CORS before auth
+// 🚨 Order matters: CORS FIRST
 app.UseCors("AllowFrontend");
 
-// CSP Header
-app.Use(async (context, next) =>
-{
-    context.Response.Headers["Content-Security-Policy"] = string.Join(" ",
-        "default-src 'self';",
-        "style-src 'self' 'unsafe-inline';",
-        "font-src 'self';",
-        "img-src 'self';",
-        "script-src 'self';",
-        "connect-src 'self';");
-    await next();
-});
+// CSP Header (optional, can comment out if causes issues)
+//app.Use(async (context, next) =>
+//{
+//    context.Response.Headers["Content-Security-Policy"] = string.Join(" ",
+//        "default-src 'self';",
+//        "style-src 'self' 'unsafe-inline';",
+//        "font-src 'self';",
+//        "img-src 'self';",
+//        "script-src 'self';",
+//        "connect-src 'self' https://cineniche-fkazataxamgph8bu.westus3-01.azurewebsites.net;");
+//    await next();
+//});
+
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Auth endpoints
+// --- AUTH ENDPOINTS ---
+
+// Logout
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(IdentityConstants.ApplicationScheme);
     return Results.Ok(new { message = "Logged out successfully." });
 });
 
+// Basic ping route
 app.MapGet("/pingauth", (HttpContext context) =>
 {
     if (context.User?.Identity?.IsAuthenticated != true)
@@ -116,9 +121,12 @@ app.MapGet("/pingauth", (HttpContext context) =>
     return Results.Ok(new { email = context.User.Identity.Name });
 });
 
+// ✅ Root path response to avoid Azure 404
+app.MapGet("/", () => Results.Ok("CineNiche API is running."));
+
 app.MapControllers();
 
-// Role seeding (optional, safe to leave in)
+// Role seeding
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -134,4 +142,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
