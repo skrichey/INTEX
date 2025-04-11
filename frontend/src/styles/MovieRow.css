@@ -1,26 +1,29 @@
 /* General styling for all movie rows */
 .movie-row {
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .movie-row-title {
   font-size: 1.75rem;
   font-weight: 700;
   color: #fff;
-  margin-left: 1rem;
-  margin-bottom: 1rem;
+  margin: 0 0 -1rem .5rem;
 }
+
 
 /* Movie row container - horizontal scroll for the posters */
 .movie-row-container {
   display: flex;
   gap: 1rem;
-  padding: 0.5rem 0;
-  overflow-x: auto; /* Allows horizontal scrolling */
+  padding: 0.5rem 1rem; /* ← Added 1rem padding left/right */
+  overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
   scrollbar-color: #555 #333;
 }
+
 
 .movie-row-container::-webkit-scrollbar {
   height: 8px;
@@ -37,14 +40,14 @@
 
 /* Movie card styling */
 .movie-card {
-  width: 10.5rem; /* Adjust to desired width */
-  height: 15rem; /* Adjust height as per design */
-  border-radius: 6px;
+  width: 12rem; /* matches modal-friendly ratio */
+  height: 18rem;
+  border-radius: 8px;
   overflow: hidden;
   background-color: #1a1a1a;
   position: relative;
   transition: transform 0.3s ease-in-out;
-  scroll-snap-align: start; /* Ensures movies snap correctly */
+  scroll-snap-align: start;
   flex-shrink: 0;
   cursor: pointer;
 }
