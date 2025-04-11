@@ -1,8 +1,11 @@
+// Program.cs - Backend Configuration (Final Working Auth Setup)
+
 using CineNiche.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,23 +26,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<MovieDbContext>()
 .AddDefaultTokenProviders();
 
-//builder.Services.AddAuthentication()
-//    .AddGoogle(googleOptions =>
-//    {
-//        googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-//        googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-//    });
-
-// Cookie Configuration
+// Cookie Auth Configuration
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.None;
-    options.SlidingExpiration = true;
     options.Cookie.Name = "AspNetCore.Identity.Application";
+    options.SlidingExpiration = true;
 
-    // 🚫 Prevent redirect to login/access denied paths
     options.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = 401;
@@ -52,24 +47,19 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder => builder
-        .WithOrigins(
-            "http://localhost:5173",
-            "https://proud-bush-0e160501e.6.azurestaticapps.net")
+        .WithOrigins("http://localhost:5173", "https://proud-bush-0e160501e.6.azurestaticapps.net")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
 });
 
-// Swagger Setup
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// HSTS Config (for non-dev)
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365);
@@ -77,11 +67,8 @@ builder.Services.AddHsts(options =>
     options.Preload = true;
 });
 
-builder.Services.AddControllers();
-
 var app = builder.Build();
 
-// Development-only middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -94,26 +81,10 @@ else
     app.UseHsts();
 }
 
-// ✅ CORS before auth
 app.UseCors("AllowFrontend");
-
-// CSP Header
-app.Use(async (context, next) =>
-{
-    context.Response.Headers["Content-Security-Policy"] = string.Join(" ",
-        "default-src 'self';",
-        "style-src 'self' 'unsafe-inline';",
-        "font-src 'self';",
-        "img-src 'self';",
-        "script-src 'self';",
-        "connect-src 'self';");
-    await next();
-});
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Auth endpoints
 app.MapPost("/logout", async (HttpContext context) =>
 {
     await context.SignOutAsync(IdentityConstants.ApplicationScheme);
@@ -128,9 +99,9 @@ app.MapGet("/pingauth", (HttpContext context) =>
     return Results.Ok(new { email = context.User.Identity.Name });
 });
 
+app.MapGet("/", () => Results.Ok("CineNiche API is running."));
 app.MapControllers();
 
-// Role seeding (optional, safe to leave in)
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -146,4 +117,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
