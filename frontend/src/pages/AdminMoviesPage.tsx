@@ -15,12 +15,13 @@ import {
   POSTER_BASE_URL,
 } from '../api/movieService';
 
-const PAGE_SIZE = 48;
+const DEFAULT_PAGE_SIZE = 30;
 
 const AdminMoviesPage: React.FC = () => {
   const [allMovies, setAllMovies] = useState<AdminMovie[]>([]);
   const [filteredMovies, setFilteredMovies] = useState<AdminMovie[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [selectedMovie, setSelectedMovie] = useState<AdminMovie | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState(localStorage.getItem('adminSearchQuery') || '');
@@ -33,7 +34,7 @@ const AdminMoviesPage: React.FC = () => {
         let hasMore = true;
 
         while (hasMore) {
-          const data = await fetchAdminMovies(page, PAGE_SIZE);
+          const data = await fetchAdminMovies(page, DEFAULT_PAGE_SIZE);
           if (!data.movies || data.movies.length === 0) {
             hasMore = false;
             break;
@@ -53,7 +54,7 @@ const AdminMoviesPage: React.FC = () => {
 
           allResults = [...allResults, ...enriched];
 
-          if (data.movies.length < PAGE_SIZE) {
+          if (data.movies.length < DEFAULT_PAGE_SIZE) {
             hasMore = false;
           } else {
             page++;
@@ -90,11 +91,11 @@ const AdminMoviesPage: React.FC = () => {
   }, [searchQuery, allMovies]);
 
   const paginatedMovies = filteredMovies.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredMovies.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredMovies.length / pageSize));
 
   const handleOpenModal = (movie: AdminMovie) => setSelectedMovie(movie);
   const handleCloseModal = () => setSelectedMovie(null);
@@ -155,11 +156,33 @@ const AdminMoviesPage: React.FC = () => {
 
   return (
     <div className="admin-page container-fluid py-4 text-white">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h2>Manage Movies</h2>
-        <Button variant="danger" onClick={() => setShowAddModal(true)}>
-          Add Movie
-        </Button>
+        <div className="d-flex align-items-center gap-3 ms-auto">
+          <div className="d-flex align-items-center">
+            <label htmlFor="pageSizeSelect" className="me-2 mb-0">
+              Movies per page:
+            </label>
+            <select
+              id="pageSizeSelect"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="form-select w-auto bg-dark text-white border-secondary"
+            >
+              {[30, 36, 42, 48].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button variant="danger" onClick={() => setShowAddModal(true)}>
+            Add Movie
+          </Button>
+        </div>
       </div>
 
       <div className="admin-movie-grid">
@@ -202,4 +225,3 @@ const AdminMoviesPage: React.FC = () => {
 };
 
 export default AdminMoviesPage;
-
