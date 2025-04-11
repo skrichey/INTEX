@@ -127,23 +127,31 @@ public async Task<IActionResult> Login([FromBody] LoginRequest request)
     return Ok(new { message = "Login successful!" });
 }
 
+    [HttpOptions("login")]
+    [AllowAnonymous]
+    public IActionResult OptionsLogin()
+    {
+        return Ok();
+    }
 
 
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            return Ok(new { message = "Logged out successfully." });
-        }
 
-        [HttpGet("pingauth")]
-        public IActionResult PingAuth()
-        {
-            if (!User.Identity.IsAuthenticated)
-                return Unauthorized();
 
-            return Ok(new { email = User.Identity.Name });
-        }
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        return Ok(new { message = "Logged out successfully." });
+    }
+
+    [HttpGet("pingauth")]
+    public IActionResult PingAuth()
+    {
+        if (!User.Identity.IsAuthenticated)
+            return Unauthorized();
+
+        return Ok(new { email = User.Identity.Name });
+    }
     }
 
     public class LoginRequest
