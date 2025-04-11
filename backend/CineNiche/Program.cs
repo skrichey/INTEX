@@ -86,7 +86,14 @@ else
 // 🚨 Order matters: CORS BEFORE auth
 app.UseCors("AllowFrontend");
 
-// CSP Header (optional, can comment out if causes issues)
+// 🔧 NEW: Fix SameSite cookie issues across domains
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    MinimumSameSitePolicy = SameSiteMode.None,
+    Secure = CookieSecurePolicy.Always
+});
+
+// Optional CSP Header
 //app.Use(async (context, next) =>
 //{
 //    context.Response.Headers["Content-Security-Policy"] = string.Join(" ",
