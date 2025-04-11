@@ -103,7 +103,6 @@ public async Task<IActionResult> Login([FromBody] LoginRequest request)
     var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
     Console.WriteLine($"PasswordSignIn Result: Succeeded={result.Succeeded}, IsLockedOut={result.IsLockedOut}, IsNotAllowed={result.IsNotAllowed}, RequiresTwoFactor={result.RequiresTwoFactor}");
 
-
     if (!result.Succeeded)
     {
         Console.WriteLine($"[Login Failed] User: {user.Email}, Reason: " +
@@ -114,18 +113,31 @@ public async Task<IActionResult> Login([FromBody] LoginRequest request)
         return Unauthorized(new { message = "Invalid credentials." });
     }
 
+    // ✅ Grab the user's roles
     var roles = await _userManager.GetRolesAsync(user);
     var claims = new List<Claim>
     {
-        new Claim(ClaimTypes.Name, user.Email),
-        new Claim(ClaimTypes.Role, roles.Contains("Admin") ? "Admin" : "User")
+        new Claim(ClaimTypes.Name, user.Email)
     };
+
+    // ✅ Add all roles as claims
+    foreach (var role in roles)
+    {
+        claims.Add(new Claim(ClaimTypes.Role, role));
+    }
 
     var identity = new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme);
     await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, new ClaimsPrincipal(identity));
 
-    return Ok(new { message = "Login successful!" });
+    // ✅ Return the roles so frontend can redirect correctly
+    return Ok(new
+    {
+        message = "Login successful!",
+        email = user.Email,
+        roles
+    });
 }
+
 
     [HttpOptions("login")]
     [AllowAnonymous]

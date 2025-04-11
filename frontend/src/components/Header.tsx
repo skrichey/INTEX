@@ -12,14 +12,13 @@ const Header: React.FC = () => {
   const isLanding = path === '/';
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [username, setUsername] = useState('');
 
-  // Load stored search when pathname changes (e.g., user navigates between pages)
   useEffect(() => {
     const stored = localStorage.getItem('adminSearchQuery') || '';
     setSearchQuery(stored);
   }, [path]);
 
-  // Keep sync if adminSearchQuery changes outside the component (e.g. other tab)
   useEffect(() => {
     const syncSearch = () => {
       const stored = localStorage.getItem('adminSearchQuery') || '';
@@ -29,11 +28,16 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('storage', syncSearch);
   }, []);
 
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('BenBen') || 'BenBen';
+    setUsername(storedUsername);
+  }, []);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
     localStorage.setItem('adminSearchQuery', query);
-    window.dispatchEvent(new Event('storage')); // Let pages react
+    window.dispatchEvent(new Event('storage'));
   };
 
   const handleLogout = () => {
@@ -48,7 +52,9 @@ const Header: React.FC = () => {
       </Link>
 
       {isAuthenticated && (
-        <div className="header-right">
+        <div className="header-right d-flex align-items-center gap-3">
+          <div className="welcome-text">Welcome, {username}!</div>
+
           <div className="search-container">
             <FormControl
               type="text"
